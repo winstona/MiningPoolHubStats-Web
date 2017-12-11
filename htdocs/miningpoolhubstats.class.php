@@ -358,7 +358,7 @@ class miningpoolhubstats
 	{
 		//Insert data only if not cached
 		if ($this->is_cached_data == 0) {
-			$sql = "INSERT INTO minerstats VALUES ('', '" . $this->strip_api_key() . "', '" . json_encode($this->coin_data) . "', NOW())";
+			$sql = "INSERT INTO minerstats VALUES ('', '" . $this->strip_api_key() . "', '" . json_encode($this->full_coin_list) . "', NOW())";
 			$this->mysqli->query($sql);
 		}
 		if ($this->is_cached_conversion == 0) {
