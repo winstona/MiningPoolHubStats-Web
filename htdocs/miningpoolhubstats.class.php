@@ -44,6 +44,7 @@ class miningpoolhubstats
 
 	private $stats = 0;
 	private $stats_time = 0;
+	private $daily_stats = 0;
 
 	private $crypto_prices = null;
 	private $crypto_api_coin_list = null;
@@ -75,6 +76,8 @@ class miningpoolhubstats
 		$this->api_key = $api_key;
 		$this->fiat = $fiat;
 		$this->init_all_coins();
+		$this->stats = $this->get_stats_for_last_x_hours(1);
+		$this->daily_stats = $this->get_stats_for_last_x_hours(24);
 		$this->execute();
 	}
 
@@ -154,7 +157,7 @@ class miningpoolhubstats
 	public function execute()
 	{
 
-		$this->get_stats_for_last_x_hours(1);
+
 		$this->get_miner_stats_from_cache();
 		$this->get_conversions_from_cache();
 		$this->get_worker_stats_from_cache();
@@ -250,7 +253,7 @@ class miningpoolhubstats
 			$exchange_rate = 0;
 			$current_total = number_format($row->confirmed + $row->ae_confirmed + $row->unconfirmed + $row->ae_unconfirmed + $row->exchange, 8);
 
-			foreach ($this->stats as $stat) {
+			foreach ($this->daily_stats as $stat) {
 				if ($row->coin == $stat->coin) {
 					$interval_data = $stat;
 				}
@@ -298,7 +301,7 @@ class miningpoolhubstats
 		$object = $result->fetch_object();
 		$this->stats_time = $object->time;
 		$stats = json_decode($object->payload);
-		$this->stats = (object)$stats->getuserallbalances->data;
+		return (object)$stats->getuserallbalances->data;
 	}
 
 	private function get_miner_stats_from_cache()

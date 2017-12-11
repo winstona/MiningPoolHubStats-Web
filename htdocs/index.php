@@ -222,11 +222,19 @@ $estimate = $mph_stats->perform_estimate();
                 <tr>
                     <td>ESTIMATES (Based on last hour)</td>
                     <td></td>
-                    <td><?php echo $estimate; ?> Hourly</td>
-                    <td><?php echo number_format($estimate * 24, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?> Daily</td>
-                    <td><?php echo number_format($estimate * 24 * 7, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?> Weekly</td>
-                    <td><?php echo number_format($estimate * 24 * 30, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?> Monthly</td>
-                    <td><?php echo number_format($estimate * 24 * 365, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?> Yearly</td>
+                    <td><?php echo $estimate . " " . $fiat; ?><br>Hourly</td>
+                    <td><?php echo number_format($estimate * 24, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
+                        <br>Daily
+                    </td>
+                    <td><?php echo number_format($estimate * 24 * 7, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
+                        <br>Weekly
+                    </td>
+                    <td><?php echo number_format($estimate * 24 * 30, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
+                        <br>Monthly
+                    </td>
+                    <td><?php echo number_format($estimate * 24 * 365, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
+                        <br>Yearly
+                    </td>
                     <td></td>
                 </tr>
             </table>
