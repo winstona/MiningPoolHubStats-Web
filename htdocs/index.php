@@ -153,10 +153,11 @@ function daily_stats($result, $prices, $last_day_stats)
 
 function perform_estimate($hourly_results, $last_stats_time)
 {
+    global $decimal_count;
 
 	$hours = number_format((time() - strtotime($last_stats_time)) / (3600), 2);
 
-	return (number_format($hourly_results / $hours, 2));
+	return (number_format($hourly_results / $hours, $decimal_count));
 }
 
 //Let's see how much rounding we have to do based on currency conversion
@@ -389,7 +390,7 @@ $estimate = perform_estimate($delta_total, $last_hour_stats_time);
     window.onload = timerInit(doer, 60, 1);
 </script>
 <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-    <a class="navbar-brand" href="#">MinerStats</a>
+    <a class="navbar-brand" href="#">MPHStats</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
