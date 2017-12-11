@@ -76,6 +76,7 @@ $is_cached_workers = 0;
 $cache_time_data = 0;
 $cache_time_conversion = 0;
 $cache_time_workers = 0;
+$decimal_count = 2;
 $coin_data = array();
 $worker_data = array();
 
@@ -155,6 +156,13 @@ function perform_estimate($hourly_results, $last_stats_time)
 	$hours = number_format((time() - strtotime($last_stats_time)) / (3600), 2);
 
 	return (number_format($hourly_results / $hours, 2));
+}
+
+//Let's see how much rounding we have to do based on currency conversion
+foreach ($all_coins as $coin) {
+	if ($fiat == $coin->code) {
+		$decimal_count = 8;
+	}
 }
 
 
@@ -247,9 +255,9 @@ foreach ($result->getuserallbalances->data as $row) {
 	}
 
 	$coin->coin = $row->coin;
-	$coin->confirmed = number_format($row->confirmed + $row->ae_confirmed + $row->exchange, 8);
-	$coin->unconfirmed = number_format($row->unconfirmed + $row->ae_unconfirmed, 8);
-	$coin->delta_hourly = number_format($coin->confirmed - $coin->last_hour_stat, 8);
+	$coin->confirmed = $row->confirmed + $row->ae_confirmed + $row->exchange;
+	$coin->unconfirmed = $row->unconfirmed + $row->ae_unconfirmed;
+	$coin->delta_hourly = $coin->confirmed - $coin->last_hour_stat;
 
 
 	//If a conversion rate was returned by API, set it
@@ -260,9 +268,9 @@ foreach ($result->getuserallbalances->data as $row) {
 
 			$price = $prices->{$code}->{$fiat};
 
-			$coin->confirmed_value = number_format($price * $coin->confirmed, 2);
-			$coin->unconfirmed_value = number_format($price * $coin->unconfirmed, 2);
-			$coin->value_delta_hourly = number_format($price * $coin->delta_hourly, 2);
+			$coin->confirmed_value = number_format($price * $coin->confirmed, $decimal_count);
+			$coin->unconfirmed_value = number_format($price * $coin->unconfirmed, $decimal_count);
+			$coin->value_delta_hourly = number_format($price * $coin->delta_hourly, $decimal_count);
 
 		}
 
@@ -328,11 +336,10 @@ $estimate = perform_estimate($delta_total, $last_hour_stats_time);
     <meta name="description" content="">
     <meta name="author" content="">
     <title>Miner Stats</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
     <style>
-        * {
-            font-size: 9px;
-            line-height: 1.0;
+        body {
+            padding-top: 5rem;
         }
     </style>
 </head>
@@ -380,30 +387,56 @@ $estimate = perform_estimate($delta_total, $last_hour_stats_time);
     // call the initial timer function, with the cb, how many iterations we want (30 seconds), and what the duration between iterations is (1 second)
     window.onload = timerInit(doer, 60, 1);
 </script>
-<nav class="navbar navbar-inverse navbar-fixed-top">
-    <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="#">MinerStats</a>
-        </div>
-        <div id="navbar" class="collapse navbar-collapse">
-            <ul class="nav navbar-nav">
-                <li class="active"><a href="#">Stats</a></li>
-            </ul>
-            <ul class="nav navbar-nav pull-right">
-                <li>
-                    <a id="timer" class="nav">60</a>
-                </li>
-            </ul>
-        </div><!--/.nav-collapse -->
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+    <a class="navbar-brand" href="#">MinerStats</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active"><a class="nav-link" href="#">Stats</a></li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FIAT Conversion</a>
+                <div class="dropdown-menu" aria-labelledby="dropdown01">
+                    <a class="dropdown-item" href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/USD/<?php echo $api_key; ?>">USD
+                    </a>
+                    <a class="dropdown-item" href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/EUR/<?php echo $api_key; ?>">EUR
+                    </a>
+                    <a class="dropdown-item" href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/GBP/<?php echo $api_key; ?>">GBP
+                    </a>
+                </div>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Crypto Conversion</a>
+                <div class="dropdown-menu" aria-labelledby="dropdown01">
+                    <a class="dropdown-item" href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/BTC/<?php echo $api_key; ?>">BTC
+                    </a>
+                    <a class="dropdown-item" href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/ETH/<?php echo $api_key; ?>">ETH
+                    </a>
+                    <a class="dropdown-item" href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/XMR/<?php echo $api_key; ?>">XMR
+                    </a>
+                </div>
+            </li>
+        </ul>
+        <ul class="navbar-nav pull-right">
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-toggle="modal" data-target="#how_to_use">How To Use</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-toggle="modal" data-target="#about_donate">About/Donate</a>
+            </li>
+        </ul>
+    </div>
+    <div id="navbar" class="collapse navbar-collapse">
+        <ul class="nav navbar-nav"></ul>
+        <ul class="nav navbar-nav pull-right">
+            <li>
+                <a id="timer" class="nav">60</a>
+            </li>
+        </ul>
     </div>
 </nav>
-<div class="container"><br><br><br><br><br>
+<main role="main" class="container">
     <h1>MiningPoolHub Stats</h1>
     <h3>24 Hr Earnings: <?php echo daily_stats($result, $prices, $last_day_stats) . " " . $fiat; ?></h3>
     <div class="row">
@@ -432,26 +465,26 @@ $estimate = perform_estimate($delta_total, $last_hour_stats_time);
                             } ?> ><?php echo $coin->coin; ?></span></td>
                         <td <?php if (array_key_exists($coin->coin, $payout_coins)) {
 							echo 'class="info"';
-						} ?>><?php echo $coin->confirmed; ?><?php echo " (" . number_format(100 * $coin->confirmed / $all_coins->{$coin->coin}->min_payout, 0) . "%)"; ?></td>
+						} ?>><?php echo number_format($coin->confirmed, 8); ?><?php echo " (" . number_format(100 * $coin->confirmed / $all_coins->{$coin->coin}->min_payout, 0) . "%)"; ?></td>
                         <td <?php if (array_key_exists($coin->coin, $payout_coins)) {
 							echo 'class="info"';
-						} ?>><?php echo $coin->unconfirmed; ?></td>
+						} ?>><?php echo number_format($coin->unconfirmed, 8); ?></td>
                         <td <?php if ($coin->delta_hourly > 0) {
 							echo 'class="success"';
-						}; ?>><?php echo number_format($coin->delta_hourly, 8); ?> (<?php echo number_format($coin->value_delta_hourly, 2) . " " . $fiat; ?>)
+						}; ?>><?php echo number_format($coin->delta_hourly, 8); ?> (<?php echo number_format($coin->value_delta_hourly, $decimal_count) . " " . $fiat; ?>)
                         </td>
                         <td <?php if (array_key_exists($coin->coin, $payout_coins)) {
 							echo 'class="info"';
 						} ?>><b><?php echo number_format($coin->confirmed + $coin->unconfirmed, 8); ?></b></td>
                         <td <?php if ($coin->confirmed_value > 0) {
 							echo 'class="success"';
-						} ?>><?php echo number_format($coin->confirmed_value, 2) . " " . $fiat; ?></td>
+						} ?>><?php echo number_format($coin->confirmed_value, $decimal_count) . " " . $fiat; ?></td>
                         <td <?php if ($coin->unconfirmed_value > 0) {
 							echo 'class="success"';
-						} ?>><?php echo number_format($coin->unconfirmed_value, 2) . " " . $fiat; ?></td>
+						} ?>><?php echo number_format($coin->unconfirmed_value, $decimal_count) . " " . $fiat; ?></td>
                         <td <?php if ($coin->unconfirmed_value > 0) {
 							echo 'class="success"';
-						} ?>><?php echo number_format($coin->confirmed_value + $coin->unconfirmed_value, 2) . " " . $fiat; ?></td>
+						} ?>><?php echo number_format($coin->confirmed_value + $coin->unconfirmed_value, $decimal_count) . " " . $fiat; ?></td>
                     </tr>
 					<?php
 				}
@@ -460,20 +493,20 @@ $estimate = perform_estimate($delta_total, $last_hour_stats_time);
                     <td>TOTAL</td>
                     <td></td>
                     <td></td>
-                    <td><?php echo number_format($delta_total, 2) . " " . $fiat; ?></td>
+                    <td><?php echo number_format($delta_total, $decimal_count) . " " . $fiat; ?></td>
                     <td></td>
-                    <td><?php echo number_format($confirmed_total, 2) . " " . $fiat; ?></td>
-                    <td><?php echo number_format($unconfirmed_total, 2) . " " . $fiat; ?></td>
-                    <td><?php echo number_format($confirmed_total + $unconfirmed_total, 2) . " " . $fiat; ?></td>
+                    <td><?php echo number_format($confirmed_total, $decimal_count) . " " . $fiat; ?></td>
+                    <td><?php echo number_format($unconfirmed_total, $decimal_count) . " " . $fiat; ?></td>
+                    <td><?php echo number_format($confirmed_total + $unconfirmed_total, $decimal_count) . " " . $fiat; ?></td>
                 </tr>
                 <tr>
                     <td>ESTIMATES (Based on last hour)</td>
                     <td></td>
                     <td><?php echo $estimate; ?> Hourly</td>
-                    <td><?php echo number_format($estimate * 24, 2) . " " . $fiat; ?> Daily</td>
-                    <td><?php echo number_format($estimate * 24 * 7, 2) . " " . $fiat; ?> Weekly</td>
-                    <td><?php echo number_format($estimate * 24 * 30, 2) . " " . $fiat; ?> Monthly</td>
-                    <td><?php echo number_format($estimate * 24 * 365, 2) . " " . $fiat; ?> Yearly</td>
+                    <td><?php echo number_format($estimate * 24, $decimal_count) . " " . $fiat; ?> Daily</td>
+                    <td><?php echo number_format($estimate * 24 * 7, $decimal_count) . " " . $fiat; ?> Weekly</td>
+                    <td><?php echo number_format($estimate * 24 * 30, $decimal_count) . " " . $fiat; ?> Monthly</td>
+                    <td><?php echo number_format($estimate * 24 * 365, $decimal_count) . " " . $fiat; ?> Yearly</td>
                     <td></td>
                 </tr>
             </table>
@@ -492,7 +525,7 @@ $estimate = perform_estimate($delta_total, $last_hour_stats_time);
                     <tr>
                         <td><?php echo $worker->username; ?></td>
                         <td><?php echo $worker->coin; ?></td>
-                        <td><?php echo number_format($worker->hashrate, 2); ?></td>
+                        <td><?php echo number_format($worker->hashrate, 4); ?></td>
                         <td><?php echo $worker->monitor == 1 ? "Enabled" : "Disabled"; ?></td>
                     </tr>
 				<?php } ?>
@@ -521,4 +554,107 @@ $estimate = perform_estimate($delta_total, $last_hour_stats_time);
             </table>
         </div>
     </div>
+    <div class="modal fade" id="about_donate" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">About / How to Donate</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <h2>&copy; <?php echo date("Y"); ?> Mindbrite LLC</h2>
+                    Thank you for your support. If you would like to donate to project to help assist with domain/server/etc. costs, you can do so at the following addresses:
+                    <div class="input-group">
+                        <span class="input-group-addon" id="basic-addon1">BTC</span>
+                        <input type="text" class="form-control" value="17ZjS6ZJTCNWrd17kkZpgRHYZJjkq5qT5A" aria-describedby="basic-addon1" disabled>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon" id="basic-addon1">LTC</span>
+                        <input type="text" class="form-control" value="LdGQgurUKH2J7iBBPcXWyLKUb8uUgXCfFF" aria-describedby="basic-addon1" disabled>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-addon" id="basic-addon1">ETH</span>
+                        <input type="text" class="form-control" value="0x6e259a08a1596653cbf66b2ae2c36c46ca123523" aria-describedby="basic-addon1" disabled>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="how_to_use" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">How to Use</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="accordion" role="tablist">
+                        <div class="card">
+                            <div class="card-header" role="tab" id="headingOne">
+                                <h5 class="mb-0">
+                                    <a class="collapsed" data-toggle="collapse" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                        How can I view stats in alternate currencies? (USD,GBP,CAD) or in crypto-currenies?
+                                    </a>
+                                </h5>
+                            </div>
+                            <div id="collapseOne" class="collapse" role="tabpanel" aria-labelledby="headingOne" data-parent="#accordion">
+                                <div class="card-body">
+                                    MiningPoolStats supports most available currences and cryptocurrencies. If you would like to view an alternate currency, you can by modifying the URL<br>
+                                    For example:<br>
+                                    <br><br>
+                                    For USD:
+                                    <a href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/USD/<?php echo $api_key; ?>">https://<?php echo $_SERVER['HTTP_HOST']; ?>/USD/<?php echo $api_key; ?></a><br>
+                                    For GBP:
+                                    <a href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/GBP/<?php echo $api_key; ?>">https://<?php echo $_SERVER['HTTP_HOST']; ?>/GBP/<?php echo $api_key; ?></a><br>
+                                    For BTC:
+                                    <a href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/BTC/<?php echo $api_key; ?>">https://<?php echo $_SERVER['HTTP_HOST']; ?>/BTC/<?php echo $api_key; ?></a><br>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" role="tab" id="headingTwo">
+                                <h5 class="mb-0">
+                                    <a class="collapsed" data-toggle="collapse" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                        What does it mean when a coin is red?
+                                    </a>
+                                </h5>
+                            </div>
+                            <div id="collapseTwo" class="collapse" role="tabpanel" aria-labelledby="headingTwo" data-parent="#accordion">
+                                <div class="card-body">
+                                    A red coin name means that you have passed the minimum payout threshold for that coin an can now "cash out" if you want to.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" role="tab" id="headingThree">
+                                <h5 class="mb-0">
+                                    <a class="collapsed" data-toggle="collapse" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                        What is the percentage next to the confirmed value for a coin?
+                                    </a>
+                                </h5>
+                            </div>
+                            <div id="collapseThree" class="collapse" role="tabpanel" aria-labelledby="headingThree" data-parent="#accordion">
+                                <div class="card-body">
+                                    The percentage next to the coin name indicates how many percent of the minimum payout you have. Once it hits 100% you can "cash out" your coins.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.bundle.min.js" integrity="sha384-3ziFidFTgxJXHMDttyPJKDuTlmxJlwbSkojudK/CkRqKDOmeSbN6KLrGdrBQnT2n" crossorigin="anonymous"></script>
 </body>
