@@ -1,7 +1,7 @@
 <?php
 date_default_timezone_set('America/Chicago');
-//error_reporting(E_ERROR);
-//ini_set('display_errors', 1);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 /**
  * Copyright (C) 2017  James Dimitrov (Jimok82)
  *
@@ -22,29 +22,13 @@ date_default_timezone_set('America/Chicago');
  *
  */
 
-
-//EDIT BELOW THIS LINE!!!
-
-//SET API KEY HERE
-//You can get your API Key Here:
-//https://miningpoolhub.com/?page=account&action=edit
-$api_key = "INSERT_YOUR_API_KEY_HERE";
-
-//Set FIAT code if you like (USD, EUR, GBP, etc.)
-$fiat = "SET_FIAT_CODE_HERE";
-
-//DO NOT EDIT BELOW THIS LINE!!!
+$api_key = null;
+$fiat = null;
 
 require_once("../config.php");
+require_once("miningpoolhubstats.class.php");
 
-$mysqli = new mysqli($db_host, $db_username, $db_password, $db_name);
-
-if ($mysqli->connect_errno) {
-	echo "Errno: " . $mysqli->connect_errno . "\n";
-	echo "Error: " . $mysqli->connect_error . "\n";
-	die();
-}
-
+$mph_stats = new miningpoolhubstats($db_host, $db_username, $db_password, $db_name);
 
 //PASTE BELOW THIS LINE
 
@@ -52,278 +36,20 @@ if ($mysqli->connect_errno) {
 if ($_GET['api_key'] != null) {
 	$api_key = filter_var($_GET['api_key'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
 }
-if ($api_key == null || $api_key == "INSERT_YOUR_API_KEY_HERE" || strlen($api_key) <= 32) {
-	die("Please enter an API key: example: " . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . "?api_key=ENTER_YOUR_KEY_HERE");
+if ($api_key == null || strlen($api_key) <= 32) {
+	die("Please enter an API key: example: https://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . "/USD/ENTER_YOUR_KEY_HERE");
 }
 
 //Check to see what we are converting to. Default to USD
 if ($_GET['fiat'] != null) {
 	$fiat = filter_var($_GET['fiat'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
 }
-if ($fiat == "SET_FIAT_CODE_HERE" || strlen($fiat) >= 4) {
+if ($fiat == null || strlen($fiat) >= 5) {
 	$fiat = "USD";
 }
 
-//Initialize some variables
-$sum_of_confirmed = 0;
-$sum_of_unconfirmed = 0;
-$confirmed_total = 0;
-$unconfirmed_total = 0;
-$delta_total = 0;
-$is_cached_data = 0;
-$is_cached_conversion = 0;
-$is_cached_workers = 0;
-$cache_time_data = 0;
-$cache_time_conversion = 0;
-$cache_time_workers = 0;
-$decimal_count = 2;
-$coin_data = array();
-$worker_data = array();
-
-//Define the coin codes and minimum payout thresholds for all coins
-$all_coins = (object)array(
-	'bitcoin' => (object)array('code' => 'BTC', 'min_payout' => '0.002'),
-	'ethereum' => (object)array('code' => 'ETH', 'min_payout' => '0.01'),
-	'monero' => (object)array('code' => 'XMR', 'min_payout' => '0.05'),
-	'zcash' => (object)array('code' => 'ZEC', 'min_payout' => '0.002'),
-	'vertcoin' => (object)array('code' => 'VTC', 'min_payout' => '0.1'),
-	'feathercoin' => (object)array('code' => 'FTC', 'min_payout' => '0.002'),
-	'digibyte-skein' => (object)array('code' => 'DGB', 'min_payout' => '0.01'),
-	'musicoin' => (object)array('code' => 'MUSIC', 'min_payout' => '0.002'),
-	'ethereum-classic' => (object)array('code' => 'ETC', 'min_payout' => '0002'),
-	'siacoin' => (object)array('code' => 'SC', 'min_payout' => '0.002'),
-	'zcoin' => (object)array('code' => 'XZC', 'min_payout' => '0.002'),
-	'bitcoin-gold' => (object)array('code' => 'BTG', 'min_payout' => '0.002'),
-	'bitcoin-cash' => (object)array('code' => 'BCH', 'min_payout' => '0.0005'),
-	'zencash' => (object)array('code' => 'ZEN', 'min_payout' => '0.002'),
-	'litecoin' => (object)array('code' => 'LTC', 'min_payout' => '0.002'),
-	'monacoin' => (object)array('code' => 'MONA', 'min_payout' => '0.1'),
-	'groestlcoin' => (object)array('code' => 'GRS', 'min_payout' => '0.002')
-);
-
-function make_api_call($url)
-{
-	$ch = curl_init($url);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-	$output = curl_exec($ch);
-	curl_close($ch);
-	return json_decode($output);
-}
-
-function strip_api_key($api_key)
-{
-	return substr($api_key, 0, 10) . substr($api_key, -10, 10);
-}
-
-function daily_stats($result, $prices, $last_day_stats)
-{
-	global $all_coins, $fiat;
-
-	$result_data = (object)array();
-	$daily_delta = 0;
-	$last_hour_stats = json_decode($last_day_stats->payload);
-	foreach ($result->getuserallbalances->data as $row) {
-		$exchange_rate = 0;
-		$current_total = number_format($row->confirmed + $row->ae_confirmed + $row->unconfirmed + $row->ae_unconfirmed + $row->exchange, 8);
-		$last_hour_data = $last_hour_stats->{$row->coin};
-		$last_hour_total = number_format($last_hour_data->confirmed + $last_hour_data->ae_confirmed + $last_hour_data->unconfirmed + $last_hour_data->ae_unconfirmed + $last_hour_data->exchange, 8);
-
-		if (key_exists($row->coin, (array)$all_coins)) {
-
-			$code = $all_coins->{$row->coin}->code;
-			$exchange_rate = $prices->{$code}->{$fiat};
-
-		}
-
-
-		$result_data->{$row->coin} = (object)array(
-			'total' => $current_total,
-			'previous_total' => $last_hour_total,
-			'delta' => $current_total - $last_hour_total,
-			'value' => ($current_total - $last_hour_total) * $exchange_rate
-		);
-	}
-
-	foreach ($result_data as $row) {
-		$daily_delta += $row->value;
-	}
-
-	return (number_format($daily_delta, 2));
-}
-
-function perform_estimate($hourly_results, $last_stats_time)
-{
-    global $decimal_count;
-
-	$hours = number_format((time() - strtotime($last_stats_time)) / (3600), 2);
-
-	return (number_format($hourly_results / $hours, $decimal_count));
-}
-
-//Let's see how much rounding we have to do based on currency conversion
-foreach ($all_coins as $coin) {
-	if ($fiat == $coin->code) {
-		$decimal_count = 8;
-	}
-}
-
-
-//Set up the conversion string for all coins we need from the cryptocompare API
-$all_coin_list = array();
-foreach ($all_coins as $coin) {
-	$all_coin_list[] = $coin->code;
-}
-$all_coin_string = implode(",", $all_coin_list);
-
-
-//Get historical data for last hour, 3 hours and 24 hours
-
-$sql = "SELECT time,payload FROM minerstats WHERE apikey = '" . strip_api_key($api_key) . "' AND time < DATE_SUB(NOW(), INTERVAL 1 HOUR) ORDER BY id DESC LIMIT 1";
-
-$result = $mysqli->query($sql);
-$last_hour_stats = $result->fetch_object();
-$last_hour_stats_time = $last_hour_stats->time;
-$last_hour_stats = json_decode($last_hour_stats->payload);
-$last_hour_stats = (object)$last_hour_stats->getuserallbalances->data;
-
-$sql = "SELECT time,payload FROM minerstats WHERE apikey = '" . strip_api_key($api_key) . "' AND time < DATE_SUB(NOW(), INTERVAL 3 HOUR) ORDER BY id DESC LIMIT 1";
-
-$result = $mysqli->query($sql);
-$last_3_hour_stats = $result->fetch_object();
-$last_3_hour_stats_time = $last_3_hour_stats->time;
-$last_3_hour_stats = json_decode($last_3_hour_stats->payload);
-$last_3_hour_stats = (object)$last_3_hour_stats->getuserallbalances->data;
-
-
-$sql = "SELECT time,payload FROM minerstats WHERE apikey = '" . strip_api_key($api_key) . "' AND time < DATE_SUB(NOW(), INTERVAL 24 HOUR) ORDER BY id DESC LIMIT 1";
-
-$result = $mysqli->query($sql);
-$last_day_stats = $result->fetch_object();
-$last_day_stats = json_decode($last_day_stats->payload);
-$last_day_stats = (object)$last_day_stats->getuserallbalances->data;
-
-
-//Check for cache, make API call if there is no data
-$sql = "SELECT time,payload FROM minerstats WHERE apikey = '" . strip_api_key($api_key) . "' AND time > DATE_SUB(NOW(), INTERVAL 5 MINUTE) ORDER BY id DESC LIMIT 1";
-
-$mysqli_result = $mysqli->query($sql);
-$cached_coin_stats = $mysqli_result->fetch_object();
-$mysqli_result->close();
-
-if ($cached_coin_stats->payload != null) {
-	$result = json_decode($cached_coin_stats->payload);
-	$is_cached_data = 1;
-	$cache_time_data = $cached_coin_stats->time;
-} else {
-	$result = make_api_call("https://miningpoolhub.com/index.php?page=api&action=getuserallbalances&api_key=" . $api_key);
-}
-
-
-//Check for worker cache, make API call if there is no data
-$sql = "SELECT time,payload FROM workers WHERE apikey = '" . strip_api_key($api_key) . "' AND time > DATE_SUB(NOW(), INTERVAL 5 MINUTE) ORDER BY id DESC LIMIT 1";
-$mysqli_result = $mysqli->query($sql);
-$cached_worker_stats = $mysqli_result->fetch_object();
-$mysqli_result->close();
-
-if ($cached_worker_stats->payload != null) {
-	$is_cached_workers = 1;
-	$cache_time_workers = $cached_worker_stats->time;
-}
-
-//Check for conversion cache, make API call if there is no data
-$sql = "SELECT time,payload FROM conversions WHERE fiat = '" . $fiat . "' AND time > DATE_SUB(NOW(), INTERVAL 5 MINUTE) ORDER BY id DESC LIMIT 1";
-$mysqli_result = $mysqli->query($sql);
-$cached_conversion_stats = $mysqli_result->fetch_object();
-$mysqli_result->close();
-
-if ($cached_conversion_stats->payload != null) {
-	$prices = json_decode($cached_conversion_stats->payload);
-	$is_cached_conversion = 1;
-	$cache_time_conversion = $cached_conversion_stats->time;
-} else {
-	$prices = make_api_call("https://min-api.cryptocompare.com/data/pricemulti?fsyms=" . $all_coin_string . "&tsyms=" . $fiat);
-}
-
-
-//Main loop - Get all the coin info we can get
-foreach ($result->getuserallbalances->data as $row) {
-
-	$coin = (object)array();
-
-	foreach ($last_hour_stats as $coin_stat) {
-		if ($coin_stat->coin == $row->coin) {
-			$coin->last_hour_stat = $coin_stat->confirmed;
-		}
-	}
-
-	$coin->coin = $row->coin;
-	$coin->confirmed = $row->confirmed + $row->ae_confirmed + $row->exchange;
-	$coin->unconfirmed = $row->unconfirmed + $row->ae_unconfirmed;
-	$coin->delta_hourly = $coin->confirmed - $coin->last_hour_stat;
-
-
-	//If a conversion rate was returned by API, set it
-	foreach ($prices as $price) {
-		if (key_exists($row->coin, $all_coins)) {
-
-			$code = $all_coins->{$row->coin}->code;
-
-			$price = $prices->{$code}->{$fiat};
-
-			$coin->confirmed_value = number_format($price * $coin->confirmed, $decimal_count);
-			$coin->unconfirmed_value = number_format($price * $coin->unconfirmed, $decimal_count);
-			$coin->value_delta_hourly = number_format($price * $coin->delta_hourly, $decimal_count);
-
-		}
-
-	}
-
-	//Add the coin data into the main array we build the table with
-	$coin_data[] = $coin;
-
-	if ($is_cached_workers == 0) {
-		//Get all of the worker stats - Separate API call for each coin...gross...
-		$workers = make_api_call("https://" . $row->coin . ".miningpoolhub.com/index.php?page=api&action=getuserworkers&api_key=" . $api_key);
-
-
-		//Get the stats for every active worker with hashrate > 0
-		$worker_list = $workers->getuserworkers->data;
-		$active_workers = array();
-		foreach ($worker_list as $worker) {
-			if ($worker->hashrate != 0) {
-				$worker->coin = $row->coin;
-				$worker_data[] = $worker;
-			}
-		}
-	}
-
-}
-
-//Sum up the totals by traversing the coin data loop and summing everything up
-foreach ($coin_data as $coin_datum) {
-	$confirmed_total += $coin_datum->confirmed_value;
-	$unconfirmed_total += $coin_datum->unconfirmed_value;
-	$delta_total += $coin_datum->value_delta_hourly;
-}
-
-//Insert data only if not cached
-if ($is_cached_data == 0) {
-	$sql = "INSERT INTO minerstats VALUES ('', '" . strip_api_key($api_key) . "', '" . json_encode($result) . "', NOW())";
-	$mysqli->query($sql);
-}
-if ($is_cached_conversion == 0) {
-	$sql = "INSERT INTO conversions VALUES ('', '" . $fiat . "', '" . json_encode($prices) . "', NOW())";
-	$mysqli->query($sql);
-}
-
-if ($is_cached_workers == 0) {
-	$sql = "INSERT INTO workers VALUES ('', '" . strip_api_key($api_key) . "', '" . json_encode($worker_data) . "', NOW())";
-	$mysqli->query($sql);
-} else {
-	$worker_data = json_decode($cached_worker_stats->payload);
-}
-
-$estimate = perform_estimate($delta_total, $last_hour_stats_time);
+$mph_stats->init_and_execute($api_key, $fiat);
+$estimate = $mph_stats->perform_estimate();
 
 
 //GENERATE THE UI HERE
@@ -440,7 +166,7 @@ $estimate = perform_estimate($delta_total, $last_hour_stats_time);
 </nav>
 <main role="main" class="container">
     <h1>MiningPoolHub Stats</h1>
-    <h3>24 Hr Earnings: <?php echo daily_stats($result, $prices, $last_day_stats) . " " . $fiat; ?></h3>
+    <h3>24 Hr Earnings: <?php echo $mph_stats->daily_stats() . " " . $fiat; ?></h3>
     <div class="row">
         <div class="col-md-12">
             <table class="table table-bordered table-striped">
@@ -456,37 +182,29 @@ $estimate = perform_estimate($delta_total, $last_hour_stats_time);
                 </tr>
 				<?php
 
-				foreach ($coin_data as $coin) {
+				foreach ($mph_stats->coin_data as $coin) {
 					?>
                     <tr>
-                        <td <?php if (array_key_exists($coin->coin, $payout_coins)) {
-							echo 'class="info"';
-						} ?>>
-                            <span <?php if ($coin->confirmed >= $all_coins->{$coin->coin}->min_payout) {
+                        <td>
+                            <span <?php if ($coin->confirmed >= $mph_stats->all_coins->{$coin->coin}->min_payout) {
 	                            echo 'style="font-weight: bold; color: red;"';
                             } ?> ><?php echo $coin->coin; ?></span></td>
-                        <td <?php if (array_key_exists($coin->coin, $payout_coins)) {
-							echo 'class="info"';
-						} ?>><?php echo number_format($coin->confirmed, 8); ?><?php echo " (" . number_format(100 * $coin->confirmed / $all_coins->{$coin->coin}->min_payout, 0) . "%)"; ?></td>
-                        <td <?php if (array_key_exists($coin->coin, $payout_coins)) {
-							echo 'class="info"';
-						} ?>><?php echo number_format($coin->unconfirmed, 8); ?></td>
-                        <td <?php if ($coin->delta_hourly > 0) {
-							echo 'class="success"';
-						}; ?>><?php echo number_format($coin->delta_hourly, 8); ?> (<?php echo number_format($coin->value_delta_hourly, $decimal_count) . " " . $fiat; ?>)
+                        <td><?php echo number_format($coin->confirmed, 8); ?><?php echo " (" . number_format(100 * $coin->confirmed / $mph_stats->all_coins->{$coin->coin}->min_payout, 0) . "%)"; ?></td>
+                        <td><?php echo number_format($coin->unconfirmed, 8); ?></td>
+                        <td <?php if ($coin->delta > 0) {
+							echo 'class="table-success"';
+						}; ?>><?php echo number_format($coin->delta, 8); ?> (<?php echo number_format($coin->delta_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>)
                         </td>
-                        <td <?php if (array_key_exists($coin->coin, $payout_coins)) {
-							echo 'class="info"';
-						} ?>><b><?php echo number_format($coin->confirmed + $coin->unconfirmed, 8); ?></b></td>
+                        <td><b><?php echo number_format($coin->confirmed + $coin->unconfirmed, 8); ?></b></td>
                         <td <?php if ($coin->confirmed_value > 0) {
-							echo 'class="success"';
-						} ?>><?php echo number_format($coin->confirmed_value, $decimal_count) . " " . $fiat; ?></td>
+							echo 'class="table-success"';
+						} ?>><?php echo number_format($coin->confirmed_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                         <td <?php if ($coin->unconfirmed_value > 0) {
-							echo 'class="success"';
-						} ?>><?php echo number_format($coin->unconfirmed_value, $decimal_count) . " " . $fiat; ?></td>
+							echo 'class="table-success"';
+						} ?>><?php echo number_format($coin->unconfirmed_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                         <td <?php if ($coin->unconfirmed_value > 0) {
-							echo 'class="success"';
-						} ?>><?php echo number_format($coin->confirmed_value + $coin->unconfirmed_value, $decimal_count) . " " . $fiat; ?></td>
+							echo 'class="table-success"';
+						} ?>><?php echo number_format($coin->confirmed_value + $coin->unconfirmed_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                     </tr>
 					<?php
 				}
@@ -495,20 +213,20 @@ $estimate = perform_estimate($delta_total, $last_hour_stats_time);
                     <td>TOTAL</td>
                     <td></td>
                     <td></td>
-                    <td><?php echo number_format($delta_total, $decimal_count) . " " . $fiat; ?></td>
+                    <td><?php echo number_format($mph_stats->delta_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                     <td></td>
-                    <td><?php echo number_format($confirmed_total, $decimal_count) . " " . $fiat; ?></td>
-                    <td><?php echo number_format($unconfirmed_total, $decimal_count) . " " . $fiat; ?></td>
-                    <td><?php echo number_format($confirmed_total + $unconfirmed_total, $decimal_count) . " " . $fiat; ?></td>
+                    <td><?php echo number_format($mph_stats->confirmed_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
+                    <td><?php echo number_format($mph_stats->unconfirmed_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
+                    <td><?php echo number_format($mph_stats->confirmed_total + $mph_stats->unconfirmed_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                 </tr>
                 <tr>
                     <td>ESTIMATES (Based on last hour)</td>
                     <td></td>
                     <td><?php echo $estimate; ?> Hourly</td>
-                    <td><?php echo number_format($estimate * 24, $decimal_count) . " " . $fiat; ?> Daily</td>
-                    <td><?php echo number_format($estimate * 24 * 7, $decimal_count) . " " . $fiat; ?> Weekly</td>
-                    <td><?php echo number_format($estimate * 24 * 30, $decimal_count) . " " . $fiat; ?> Monthly</td>
-                    <td><?php echo number_format($estimate * 24 * 365, $decimal_count) . " " . $fiat; ?> Yearly</td>
+                    <td><?php echo number_format($estimate * 24, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?> Daily</td>
+                    <td><?php echo number_format($estimate * 24 * 7, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?> Weekly</td>
+                    <td><?php echo number_format($estimate * 24 * 30, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?> Monthly</td>
+                    <td><?php echo number_format($estimate * 24 * 365, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?> Yearly</td>
                     <td></td>
                 </tr>
             </table>
@@ -523,7 +241,7 @@ $estimate = perform_estimate($delta_total, $last_hour_stats_time);
                     <th>Hashrate</th>
                     <th>Monitor</th>
                 </tr>
-				<?php foreach ($worker_data as $worker) { ?>
+				<?php foreach ($mph_stats->worker_data as $worker) { ?>
                     <tr>
                         <td><?php echo $worker->username; ?></td>
                         <td><?php echo $worker->coin; ?></td>
@@ -543,15 +261,15 @@ $estimate = perform_estimate($delta_total, $last_hour_stats_time);
                 </tr>
                 <tr>
                     <td>Coin Cache</td>
-                    <td><?php echo $is_cached_data == 1 ? "hit  (Cached Data From: " . $cache_time_data . ")" : ""; ?></td>
+                    <td><?php echo $mph_stats->is_cached_data == 1 ? "hit  (Cached Data From: " . $mph_stats->cache_time_data . ")" : ""; ?></td>
                 </tr>
                 <tr>
                     <td>Conversion Cache</td>
-                    <td><?php echo $is_cached_conversion == 1 ? "hit  (Cached Data From: " . $cache_time_conversion . ")" : ""; ?></td>
+                    <td><?php echo $mph_stats->is_cached_conversion == 1 ? "hit  (Cached Data From: " . $mph_stats->cache_time_conversion . ")" : ""; ?></td>
                 </tr>
                 <tr>
                     <td>Worker Cache</td>
-                    <td><?php echo $is_cached_workers == 1 ? "hit  (Cached Data From: " . $cache_time_workers . ")" : ""; ?></td>
+                    <td><?php echo $mph_stats->is_cached_workers == 1 ? "hit  (Cached Data From: " . $mph_stats->cache_time_workers . ")" : ""; ?></td>
                 </tr>
             </table>
         </div>
