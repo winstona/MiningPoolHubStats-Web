@@ -155,7 +155,7 @@ $estimate = $mph_stats->perform_estimate();
             </li>
             <ul class="nav navbar-nav"></ul>
             <ul class="nav navbar-nav pull-right">
-                <li class="nav-item" >
+                <li class="nav-item">
                     <a id="timer" class="nav-link">60</a>
                 </li>
             </ul>
@@ -242,19 +242,23 @@ $estimate = $mph_stats->perform_estimate();
         <div class="col-md-12">
             <table class="table table-bordered table-striped">
                 <tr>
+                    <th>#</th>
                     <th>Worker</th>
                     <th>Coin</th>
                     <th>Hashrate</th>
                     <th>Monitor</th>
                 </tr>
-				<?php foreach ($mph_stats->worker_data as $worker) { ?>
+				<?php $count = 1;
+				foreach ($mph_stats->worker_data as $worker) { ?>
                     <tr>
+                        <td><?php echo $count; ?></td>
                         <td><?php echo $worker->username; ?></td>
                         <td><?php echo $worker->coin; ?></td>
                         <td><?php echo number_format($worker->hashrate, 4); ?></td>
                         <td><?php echo $worker->monitor == 1 ? "Enabled" : "Disabled"; ?></td>
                     </tr>
-				<?php } ?>
+					<?php $count++;
+				}; ?>
             </table>
         </div>
     </div>
