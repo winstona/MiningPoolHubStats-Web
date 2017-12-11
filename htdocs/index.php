@@ -646,6 +646,20 @@ $estimate = perform_estimate($delta_total, $last_hour_stats_time);
                                 </div>
                             </div>
                         </div>
+                        <div class="card">
+                            <div class="card-header" role="tab" id="headingFour">
+                                <h5 class="mb-0">
+                                    <a class="collapsed" data-toggle="collapse" href="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                                        Why are my stats so inaccurate?
+                                    </a>
+                                </h5>
+                            </div>
+                            <div id="collapseFour" class="collapse" role="tabpanel" aria-labelledby="headingFour" data-parent="#accordion">
+                                <div class="card-body">
+                                    Stats are based on the last three hours of stats. Unfortunately, PPNLS pools like MPH are based on luck. You can earn a lot one hour, and nothing the next. If your last few hours were luckier, your stats will be better than expected. If you had an unlucky hour, your stats will be lower...
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
