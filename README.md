@@ -10,7 +10,7 @@ https://miningpoolhubstats.com
 
 2. You can pass your API Key and the requested FIAT currency to convert to into the page as a variable:
 
-_example: minerstats.php?api_key=THIS_IS_MY_API_KEY_&amp;fiat=FIAT_CURRENCY_CODE
+_example: /index.php?api_key=THIS_IS_MY_API_KEY_&amp;fiat=FIAT_CURRENCY_CODE
 
 3. I have also created a web page for every one to use
 
