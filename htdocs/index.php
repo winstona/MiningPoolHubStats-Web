@@ -120,7 +120,7 @@ $estimate = $mph_stats->perform_estimate();
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+    <div class="collapse navbar-collapse">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active"><a class="nav-link" href="#">Stats</a></li>
             <li class="nav-item dropdown">
@@ -153,14 +153,12 @@ $estimate = $mph_stats->perform_estimate();
             <li class="nav-item">
                 <a class="nav-link" href="#" data-toggle="modal" data-target="#about_donate">About/Donate</a>
             </li>
-        </ul>
-    </div>
-    <div id="navbar" class="collapse navbar-collapse">
-        <ul class="nav navbar-nav"></ul>
-        <ul class="nav navbar-nav pull-right">
-            <li>
-                <a id="timer" class="nav">60</a>
-            </li>
+            <ul class="nav navbar-nav"></ul>
+            <ul class="nav navbar-nav pull-right">
+                <li class="nav-item" >
+                    <a id="timer" class="nav-link">60</a>
+                </li>
+            </ul>
         </ul>
     </div>
 </nav>
