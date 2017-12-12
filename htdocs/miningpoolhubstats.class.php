@@ -45,6 +45,7 @@ class miningpoolhubstats
 	private $stats = 0;
 	private $stats_time = 0;
 	private $daily_stats = 0;
+	public $minutes = 0;
 
 	private $crypto_prices = null;
 	private $crypto_api_coin_list = null;
@@ -77,7 +78,7 @@ class miningpoolhubstats
 		$this->fiat = $fiat;
 		$this->init_all_coins();
 		$this->stats = $this->get_stats_for_last_x_hours(1);
-		$this->daily_stats = $this->get_stats_for_last_x_hours(24);
+		$this->daily_stats = $this->get_stats_for_last_day();
 		$this->execute();
 	}
 
@@ -176,7 +177,8 @@ class miningpoolhubstats
 			$coin->coin = $row->coin;
 			$coin->confirmed = number_format($row->confirmed + $row->ae_confirmed + $row->exchange, 8);
 			$coin->unconfirmed = number_format($row->unconfirmed + $row->ae_unconfirmed, 8);
-			$coin->delta = $coin->confirmed - $coin->last_stat;
+			$coin->total = number_format($row->confirmed + $row->ae_confirmed + $row->exchange + $row->unconfirmed + $row->ae_unconfirmed, 8);
+			$coin->delta = number_format($row->confirmed + $row->ae_confirmed + $row->exchange - $coin->last_stat, 8);
 
 
 			//If a conversion rate was returned by API, set it
@@ -186,8 +188,9 @@ class miningpoolhubstats
 			//Get fiat prices
 			$price = $this->crypto_prices->{$code}->{$this->fiat};
 
-			$coin->confirmed_value = number_format($price * $coin->confirmed, $this->get_decimal_for_conversion());
-			$coin->unconfirmed_value = number_format($price * $coin->unconfirmed, $this->get_decimal_for_conversion());
+			$coin->confirmed_value = number_format($price * ($row->confirmed + $row->ae_confirmed + $row->exchange), $this->get_decimal_for_conversion());
+			$coin->unconfirmed_value = number_format($price * ($row->unconfirmed + $row->ae_unconfirmed), $this->get_decimal_for_conversion());
+			$coin->total_value = number_format($price * ($row->confirmed + $row->ae_confirmed + $row->exchange + $row->unconfirmed + $row->ae_unconfirmed), $this->get_decimal_for_conversion());
 			$coin->delta_value = number_format($price * $coin->delta, $this->get_decimal_for_conversion());
 
 			//Add the coin data into the main array we build the table with
@@ -288,7 +291,7 @@ class miningpoolhubstats
 	function perform_estimate()
 	{
 		$hours = number_format((time() - strtotime($this->stats_time)) / (3600), 2);
-
+		$this->minutes = number_format($hours * 60);
 		return (number_format($this->delta_total / $hours, $this->get_decimal_for_conversion()));
 	}
 
@@ -300,6 +303,17 @@ class miningpoolhubstats
 		$result = $this->mysqli->query($sql);
 		$object = $result->fetch_object();
 		$this->stats_time = $object->time;
+		$stats = json_decode($object->payload);
+		return (object)$stats->getuserallbalances->data;
+	}
+
+	public function get_stats_for_last_day()
+	{
+
+		$sql = "SELECT time,payload FROM minerstats WHERE apikey = '" . $this->strip_api_key() . "' AND time < DATE_SUB(NOW(), INTERVAL 24 HOUR) ORDER BY id DESC LIMIT 1";
+
+		$result = $this->mysqli->query($sql);
+		$object = $result->fetch_object();
 		$stats = json_decode($object->payload);
 		return (object)$stats->getuserallbalances->data;
 	}

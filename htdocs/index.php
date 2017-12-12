@@ -187,22 +187,22 @@ $estimate = $mph_stats->perform_estimate();
                             <span <?php if ($coin->confirmed >= $mph_stats->all_coins->{$coin->coin}->min_payout) {
 	                            echo 'style="font-weight: bold; color: red;"';
                             } ?> ><?php echo $coin->coin; ?></span></td>
-                        <td><?php echo number_format($coin->confirmed, 8); ?><?php echo " (" . number_format(100 * $coin->confirmed / $mph_stats->all_coins->{$coin->coin}->min_payout, 0) . "%)"; ?></td>
-                        <td><?php echo number_format($coin->unconfirmed, 8); ?></td>
+                        <td><?php echo $coin->confirmed; ?><?php echo " (" . number_format(100 * $coin->confirmed / $mph_stats->all_coins->{$coin->coin}->min_payout, 0) . "%)"; ?></td>
+                        <td><?php echo $coin->unconfirmed; ?></td>
                         <td <?php if ($coin->delta > 0) {
 							echo 'class="table-success"';
-						}; ?>><?php echo number_format($coin->delta, 8); ?> (<?php echo number_format($coin->delta_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>)
+						}; ?>><?php echo $coin->delta; ?> (<?php echo $coin->delta_value . " " . $fiat; ?>)
                         </td>
-                        <td><b><?php echo number_format($coin->confirmed + $coin->unconfirmed, 8); ?></b></td>
+                        <td><b><?php echo $coin->total; ?></b></td>
                         <td <?php if ($coin->confirmed_value > 0) {
 							echo 'class="table-success"';
-						} ?>><?php echo number_format($coin->confirmed_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
+						} ?>><?php echo $coin->confirmed_value . " " . $fiat; ?></td>
                         <td <?php if ($coin->unconfirmed_value > 0) {
 							echo 'class="table-success"';
-						} ?>><?php echo number_format($coin->unconfirmed_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
-                        <td <?php if ($coin->unconfirmed_value > 0) {
+						} ?>><?php echo $coin->unconfirmed_value . " " . $fiat; ?></td>
+                        <td <?php if ($coin->total_value > 0) {
 							echo 'class="table-success"';
-						} ?>><?php echo number_format($coin->confirmed_value + $coin->unconfirmed_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
+						} ?>><?php echo $coin->total_value . " " . $fiat; ?></td>
                     </tr>
 					<?php
 				}
@@ -218,7 +218,7 @@ $estimate = $mph_stats->perform_estimate();
                     <td><?php echo number_format($mph_stats->confirmed_total + $mph_stats->unconfirmed_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                 </tr>
                 <tr>
-                    <td>ESTIMATES (Based on last hour)</td>
+                    <td>ESTIMATES (Based on last <?php echo $mph_stats->minutes; ?> minutes)</td>
                     <td></td>
                     <td><?php echo $estimate . " " . $fiat; ?><br>Hourly</td>
                     <td><?php echo number_format($estimate * 24, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
