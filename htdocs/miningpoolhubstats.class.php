@@ -196,11 +196,6 @@ class miningpoolhubstats
 			//Add the coin data into the main array we build the table with
 			$this->coin_data[] = $coin;
 
-			//Get all of the worker stats - Separate API call for each coin...gross...
-			if ($this->is_cached_workers == 0) {
-				$this->generate_worker_stats($coin->coin);
-			}
-
 
 		}
 
@@ -350,6 +345,11 @@ class miningpoolhubstats
 			$this->worker_data = json_decode($object->payload);
 			$this->is_cached_workers = 1;
 			$this->cache_time_workers = $object->time;
+		} else {
+			//Get all of the worker stats - Separate API call for each coin...gross...
+			foreach ($this->all_coins as $coin => $coin_data) {
+				$this->generate_worker_stats($coin);
+			}
 		}
 	}
 
