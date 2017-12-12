@@ -148,6 +148,9 @@ $estimate = $mph_stats->perform_estimate();
         </ul>
         <ul class="navbar-nav pull-right">
             <li class="nav-item">
+                <a class="nav-link" href="#" data-toggle="modal" data-target="#changelog">Changelog</a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="#" data-toggle="modal" data-target="#how_to_use">How To Use</a>
             </li>
             <li class="nav-item">
@@ -288,7 +291,7 @@ $estimate = $mph_stats->perform_estimate();
             </table>
         </div>
     </div>
-    <div class="modal fade" id="about_donate" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="about_donate" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -312,6 +315,30 @@ $estimate = $mph_stats->perform_estimate();
                         <span class="input-group-addon" id="basic-addon1">ETH</span>
                         <input type="text" class="form-control" value="0x6e259a08a1596653cbf66b2ae2c36c46ca123523" aria-describedby="basic-addon1" disabled>
                     </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="changelog" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Changelog</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <h2>Changes 12/12/2017</h2>
+                    <ul>
+                        <li>Added Changelog</li>
+                        <li>Changed payout color to three colors (green, orange and red based on percentage of threshold</li>
+                    </ul>
+                    <br><br>
+                    <h4>See <a href="#" data-toggle="modal" data-target="#how_to_use">How To Use</a> for more info.</h4>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
