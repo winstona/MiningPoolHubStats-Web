@@ -250,7 +250,7 @@ $estimate = $mph_stats->perform_estimate();
                     <td><?php echo number_format($mph_stats->hourly_estimate_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                 </tr>
                 <tr>
-                    <td>ESTIMATES (Based on last <?php echo $mph_stats->minutes; ?> minutes)</td>
+                    <td>ESTIMATES (Based on API block info)</td>
                     <td></td>
                     <td><?php echo number_format($mph_stats->hourly_estimate_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
                         <br>Hourly
