@@ -204,12 +204,12 @@ $estimate = $mph_stats->perform_estimate();
 					?>
                     <tr>
                         <td>
-                            <span <?php if ($coin->confirmed >= $mph_stats->all_coins->{$coin->coin}->min_payout) {
-		                        echo 'style="font-weight: bold; color: green;"';
+                            <span <?php if ($coin->confirmed >= $mph_stats->all_coins->{$coin->coin}->min_payout * 20) {
+		                        echo 'style="font-weight: bold; color: red;"';
 	                        } else if ($coin->confirmed >= $mph_stats->all_coins->{$coin->coin}->min_payout * 5) {
 		                        echo 'style="font-weight: bold; color: orange;"';
-	                        } else if ($coin->confirmed >= $mph_stats->all_coins->{$coin->coin}->min_payout * 20) {
-		                        echo 'style="font-weight: bold; color: red;"';
+	                        } else if ($coin->confirmed >= $mph_stats->all_coins->{$coin->coin}->min_payout) {
+		                        echo 'style="font-weight: bold; color: green;"';
 	                        } ?>><?php echo $coin->coin; ?></span></td>
                         <td><?php echo $coin->confirmed; ?><?php echo " (" . number_format(100 * $coin->confirmed / $mph_stats->all_coins->{$coin->coin}->min_payout, 0) . "%)"; ?></td>
                         <td><?php echo $coin->unconfirmed; ?></td>
