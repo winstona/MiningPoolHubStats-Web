@@ -185,8 +185,12 @@ $estimate = $mph_stats->perform_estimate();
                     <tr>
                         <td>
                             <span <?php if ($coin->confirmed >= $mph_stats->all_coins->{$coin->coin}->min_payout) {
-	                            echo 'style="font-weight: bold; color: red;"';
-                            } ?> ><?php echo $coin->coin; ?></span></td>
+		                        echo 'style="font-weight: bold; color: green;"';
+	                        } else if ($coin->confirmed >= $mph_stats->all_coins->{$coin->coin}->min_payout * 5) {
+		                        echo 'style="font-weight: bold; color: orange;"';
+	                        } else if ($coin->confirmed >= $mph_stats->all_coins->{$coin->coin}->min_payout * 20) {
+		                        echo 'style="font-weight: bold; color: red;"';
+	                        } ?>><?php echo $coin->coin; ?></span></td>
                         <td><?php echo $coin->confirmed; ?><?php echo " (" . number_format(100 * $coin->confirmed / $mph_stats->all_coins->{$coin->coin}->min_payout, 0) . "%)"; ?></td>
                         <td><?php echo $coin->unconfirmed; ?></td>
                         <td <?php if ($coin->delta > 0) {
@@ -352,13 +356,20 @@ $estimate = $mph_stats->perform_estimate();
                             <div class="card-header" role="tab" id="headingTwo">
                                 <h5 class="mb-0">
                                     <a class="collapsed" data-toggle="collapse" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                                        What does it mean when a coin is red?
+                                        What does it mean when a coin is in green, orange, or red text?
                                     </a>
                                 </h5>
                             </div>
                             <div id="collapseTwo" class="collapse" role="tabpanel" aria-labelledby="headingTwo" data-parent="#accordion">
                                 <div class="card-body">
-                                    A red coin name means that you have passed the minimum payout threshold for that coin an can now "cash out" if you want to.
+                                    We have implemented some recommended values for coins in order to prevent keeping too much in the pool wallet.<br>
+                                    <br>
+                                    <span style="font-weight: bold; color: green;">GREEN</span>: This means that you have reached the minimum payout threshold and you can "cash out" if you want to.<br>
+                                    <br>
+                                    <span style="font-weight: bold; color: orange;">ORANGE</span>: This means that you are at 5x the minimum payout and you should consider saving your funds to a local wallet soon.<br>
+                                    <br>
+                                    <span style="font-weight: bold; color: red;">RED</span>: This means that you are at 20x the minimum payout and you are probably holding too many coins in an online wallet. You should move coins to a local wallet ASAP.
+                                    <br>
                                 </div>
                             </div>
                         </div>
