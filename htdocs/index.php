@@ -267,7 +267,6 @@ $estimate = $mph_stats->perform_estimate();
                     <td><?php echo number_format($mph_stats->hourly_estimate_total * 24 * 365, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
                         <br>Yearly
                     </td>
-                    <td></td>
                 </tr>
             </table>
         </div>

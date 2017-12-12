@@ -188,7 +188,7 @@ class miningpoolhubstats
 			$coin->unconfirmed = number_format($row->unconfirmed + $row->ae_unconfirmed, 8);
 			$coin->total = number_format($row->confirmed + $row->ae_confirmed + $row->exchange + $row->unconfirmed + $row->ae_unconfirmed, 8);
 			$coin->payout_last_24 = number_format($row->payout_last_24, 8);
-			$coin->hourly_estimate = (12*60 / $row->block_time) * $row->estimated_earnings;
+			$coin->hourly_estimate = ((1440 / $row->block_time) * $row->estimated_earnings);
 			$coin->hashrate = $row->hashrate;
 
 			//If a conversion rate was returned by API, set it
