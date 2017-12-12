@@ -360,6 +360,7 @@ $estimate = $mph_stats->perform_estimate();
                 <ul>
                     <li>Added Changelog</li>
                     <li>Changed payout color to three colors (green, orange and red based on percentage of threshold</li>
+                    <li>Withdrawls are now "zeroed" to prevent negative daily estimates (IN TESTING)</li>
                 </ul>
                 <br><br>
                 <h4>See <a href="#" data-toggle="modal" data-target="#how_to_use">How To Use</a> for more info.</h4>
