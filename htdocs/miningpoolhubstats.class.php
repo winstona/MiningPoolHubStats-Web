@@ -188,10 +188,10 @@ class miningpoolhubstats
 			//Get fiat prices
 			$price = $this->crypto_prices->{$code}->{$this->fiat};
 
-			$coin->confirmed_value = number_format($price * ($row->confirmed + $row->ae_confirmed + $row->exchange), $this->get_decimal_for_conversion());
-			$coin->unconfirmed_value = number_format($price * ($row->unconfirmed + $row->ae_unconfirmed), $this->get_decimal_for_conversion());
-			$coin->total_value = number_format($price * ($row->confirmed + $row->ae_confirmed + $row->exchange + $row->unconfirmed + $row->ae_unconfirmed), $this->get_decimal_for_conversion());
-			$coin->delta_value = number_format($price * $coin->delta, $this->get_decimal_for_conversion());
+			$coin->confirmed_value = $price * ($row->confirmed + $row->ae_confirmed + $row->exchange);
+			$coin->unconfirmed_value = $price * ($row->unconfirmed + $row->ae_unconfirmed);
+			$coin->total_value = $price * ($row->confirmed + $row->ae_confirmed + $row->exchange + $row->unconfirmed + $row->ae_unconfirmed);
+			$coin->delta_value = $price * $coin->delta;
 
 			//Add the coin data into the main array we build the table with
 			$this->coin_data[] = $coin;
@@ -208,9 +208,15 @@ class miningpoolhubstats
 	{
 		//Sum up the totals by traversing the coin data loop and summing everything up
 		foreach ($this->coin_data as $coin_datum) {
-			$this->confirmed_total += $coin_datum->confirmed_value;
-			$this->unconfirmed_total += $coin_datum->unconfirmed_value;
-			$this->delta_total += $coin_datum->delta_value;
+			if ($coin_datum->confirmed_value > 0) {
+				$this->confirmed_total += $coin_datum->confirmed_value;
+			}
+			if ($coin_datum->unconfirmed_value > 0) {
+				$this->unconfirmed_total += $coin_datum->unconfirmed_value;
+			}
+			if ($coin_datum->delta_value > 0) {
+				$this->delta_total += $coin_datum->delta_value;
+			}
 		}
 
 	}

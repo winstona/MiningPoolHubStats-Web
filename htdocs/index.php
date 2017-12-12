@@ -191,18 +191,18 @@ $estimate = $mph_stats->perform_estimate();
                         <td><?php echo $coin->unconfirmed; ?></td>
                         <td <?php if ($coin->delta > 0) {
 							echo 'class="table-success"';
-						}; ?>><?php echo $coin->delta; ?> (<?php echo $coin->delta_value . " " . $fiat; ?>)
+						}; ?>><?php echo $coin->delta; ?> (<?php echo number_format($coin->delta_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>)
                         </td>
                         <td><b><?php echo $coin->total; ?></b></td>
                         <td <?php if ($coin->confirmed_value > 0) {
 							echo 'class="table-success"';
-						} ?>><?php echo $coin->confirmed_value . " " . $fiat; ?></td>
+						} ?>><?php echo number_format($coin->confirmed_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                         <td <?php if ($coin->unconfirmed_value > 0) {
 							echo 'class="table-success"';
-						} ?>><?php echo $coin->unconfirmed_value . " " . $fiat; ?></td>
+						} ?>><?php echo number_format($coin->unconfirmed_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                         <td <?php if ($coin->total_value > 0) {
 							echo 'class="table-success"';
-						} ?>><?php echo $coin->total_value . " " . $fiat; ?></td>
+						} ?>><?php echo number_format($coin->total_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                     </tr>
 					<?php
 				}
