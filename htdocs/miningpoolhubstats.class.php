@@ -331,7 +331,8 @@ class miningpoolhubstats
 		if ($object->payload != null) {
 			$this->full_coin_list = json_decode($object->payload);
 			$this->is_cached_data = 1;
-			$this->cache_time_data = $object->time;
+			$this->cache_time_data = round(abs(time() - strtotime($object->time)),0). " seconds ago";
+
 		} else {
 			$this->get_coin_list();
 		}
@@ -350,7 +351,7 @@ class miningpoolhubstats
 		if ($object->payload != null) {
 			$this->worker_data = json_decode($object->payload);
 			$this->is_cached_workers = 1;
-			$this->cache_time_workers = $object->time;
+			$this->cache_time_workers = round(abs(time() - strtotime($object->time)),0). " seconds ago";
 		} else {
 			//Get all of the worker stats - Separate API call for each coin...gross...
 			foreach ($this->all_coins as $coin => $coin_data) {
@@ -370,7 +371,8 @@ class miningpoolhubstats
 		if ($object->payload != null) {
 			$this->crypto_prices = json_decode($object->payload);
 			$this->is_cached_conversion = 1;
-			$this->cache_time_conversion = $object->time;
+			$this->cache_time_conversion = round(abs(time() - strtotime($object->time)),0). " seconds ago";
+
 		} else {
 			$this->get_prices();
 		}
