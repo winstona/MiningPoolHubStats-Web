@@ -26,7 +26,7 @@ $api_key = null;
 $fiat = null;
 
 require_once("../config.php");
-require_once("miningpoolhubstats.class.php");
+require_once("m.class.php");
 
 $mph_stats = new miningpoolhubstats($db_host, $db_username, $db_password, $db_name);
 
@@ -70,10 +70,12 @@ $estimate = $mph_stats->perform_estimate();
             position: relative;
             min-height: 100%;
         }
+
         body {
             padding-top: 4.5rem;
             margin-bottom: 60px; /* Margin bottom by footer height */
         }
+
         .footer {
             position: absolute;
             bottom: 0;
@@ -82,6 +84,7 @@ $estimate = $mph_stats->perform_estimate();
             line-height: 60px; /* Vertically center the text there */
             background-color: #f5f5f5;
         }
+
         .footer > .container {
             padding-right: 15px;
             padding-left: 15px;
@@ -192,11 +195,10 @@ $estimate = $mph_stats->perform_estimate();
                     <th>Coin</th>
                     <th>Confirmed (% of min payout)</th>
                     <th>Unconfirmed</th>
-                    <th>Changes Last <?php echo $mph_stats->minutes; ?> Minutes</th>
+                    <th>Payout Last 24 Hours</th>
                     <th>Total</th>
-                    <th>Value (Conf.)</th>
-                    <th>Value (Unconf.)</th>
-                    <th>Value (Total)</th>
+                    <th>Hash Rate</th>
+                    <th>Hourly Estimate</th>
                 </tr>
 				<?php
 
@@ -205,56 +207,64 @@ $estimate = $mph_stats->perform_estimate();
                     <tr>
                         <td>
                             <span <?php if ($coin->confirmed >= $mph_stats->all_coins->{$coin->coin}->min_payout * 20) {
-		                        echo 'style="font-weight: bold; color: red;"';
-	                        } else if ($coin->confirmed >= $mph_stats->all_coins->{$coin->coin}->min_payout * 5) {
-		                        echo 'style="font-weight: bold; color: orange;"';
-	                        } else if ($coin->confirmed >= $mph_stats->all_coins->{$coin->coin}->min_payout) {
-		                        echo 'style="font-weight: bold; color: green;"';
-	                        } ?>><?php echo $coin->coin; ?></span></td>
-                        <td><?php echo $coin->confirmed; ?><?php echo " (" . number_format(100 * $coin->confirmed / $mph_stats->all_coins->{$coin->coin}->min_payout, 0) . "%)"; ?></td>
-                        <td><?php echo $coin->unconfirmed; ?></td>
-                        <td <?php if ($coin->delta > 0) {
-							echo 'class="table-success"';
-						}; ?>><?php echo $coin->delta; ?> (<?php echo number_format($coin->delta_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>)
-                        </td>
-                        <td><b><?php echo $coin->total; ?></b></td>
+	                            echo 'style="font-weight: bold; color: red;"';
+                            } else if ($coin->confirmed >= $mph_stats->all_coins->{$coin->coin}->min_payout * 5) {
+	                            echo 'style="font-weight: bold; color: orange;"';
+                            } else if ($coin->confirmed >= $mph_stats->all_coins->{$coin->coin}->min_payout) {
+	                            echo 'style="font-weight: bold; color: green;"';
+                            } ?>><?php echo $coin->coin; ?></span></td>
                         <td <?php if ($coin->confirmed_value > 0) {
 							echo 'class="table-success"';
-						} ?>><?php echo number_format($coin->confirmed_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
+						} ?>><?php echo $coin->confirmed; ?><?php echo " (" . number_format(100 * $coin->confirmed / $mph_stats->all_coins->{$coin->coin}->min_payout, 0) . "%)"; ?>
+                            <br><?php echo number_format($coin->confirmed_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
+                        </td>
                         <td <?php if ($coin->unconfirmed_value > 0) {
 							echo 'class="table-success"';
-						} ?>><?php echo number_format($coin->unconfirmed_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
+						} ?>><?php echo $coin->unconfirmed; ?>
+                            <br><?php echo number_format($coin->unconfirmed_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
+                        </td>
+                        <td <?php if ($coin->payout_last_24 > 0) {
+							echo 'class="table-success"';
+						}; ?>><?php echo $coin->payout_last_24; ?>
+                            <br>(<?php echo number_format($coin->payout_last_24_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>)
+                        </td>
                         <td <?php if ($coin->total_value > 0) {
 							echo 'class="table-success"';
-						} ?>><?php echo number_format($coin->total_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
+						} ?>><b><?php echo $coin->total; ?>
+                                <br><?php echo number_format($coin->total_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
+                            </b></td>
+                        </td>
+                        <td><?php echo number_format($coin->hashrate, 4); ?></td>
+                        <td><?php echo number_format($coin->hourly_estimate_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                     </tr>
 					<?php
 				}
 				?>
                 <tr>
                     <td>TOTAL</td>
-                    <td></td>
-                    <td></td>
-                    <td><?php echo number_format($mph_stats->delta_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
-                    <td></td>
                     <td><?php echo number_format($mph_stats->confirmed_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                     <td><?php echo number_format($mph_stats->unconfirmed_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
+                    <td><?php echo number_format($mph_stats->payout_last_24_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                     <td><?php echo number_format($mph_stats->confirmed_total + $mph_stats->unconfirmed_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
+                    <td></td>
+                    <td><?php echo number_format($mph_stats->hourly_estimate_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                 </tr>
                 <tr>
                     <td>ESTIMATES (Based on last <?php echo $mph_stats->minutes; ?> minutes)</td>
                     <td></td>
-                    <td><?php echo $estimate . " " . $fiat; ?><br>Hourly</td>
-                    <td><?php echo number_format($estimate * 24, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
+                    <td><?php echo number_format($mph_stats->hourly_estimate_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
+                        <br>Hourly
+                    </td>
+                    <td><?php echo number_format($mph_stats->hourly_estimate_total * 24, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
                         <br>Daily
                     </td>
-                    <td><?php echo number_format($estimate * 24 * 7, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
+                    <td><?php echo number_format($mph_stats->hourly_estimate_total * 24 * 7, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
                         <br>Weekly
                     </td>
-                    <td><?php echo number_format($estimate * 24 * 30, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
+                    <td><?php echo number_format($mph_stats->hourly_estimate_total * 24 * 30, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
                         <br>Monthly
                     </td>
-                    <td><?php echo number_format($estimate * 24 * 365, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
+                    <td><?php echo number_format($mph_stats->hourly_estimate_total * 24 * 365, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
                         <br>Yearly
                     </td>
                     <td></td>
@@ -312,7 +322,7 @@ $estimate = $mph_stats->perform_estimate();
 <footer class="footer">
     <div class="container">
         <span class="text-muted">If you feel like this site has helped you, please consider <a href="#" data-toggle="modal" data-target="#about_donate">donating</a> to help cover server/hosting costs. Thank you!  </span>
-        <span class="text-muted">  &copy; <?php echo date("Y");?> Mindbrite LLC.</span>
+        <span class="text-muted">  &copy; <?php echo date("Y"); ?> Mindbrite LLC.</span>
     </div>
 </footer>
 <div class="modal fade" id="about_donate" tabindex="-1" role="dialog" aria-hidden="true">
@@ -360,7 +370,7 @@ $estimate = $mph_stats->perform_estimate();
                 <ul>
                     <li>Added Changelog</li>
                     <li>Changed payout color to three colors (green, orange and red based on percentage of threshold</li>
-                    <li>Withdrawls are now "zeroed" to prevent negative daily estimates (IN TESTING)</li>
+                    <li>Earnings and estimates are now pulled directly from pool API</li>
                 </ul>
                 <br><br>
                 <h4>See <a href="#" data-toggle="modal" data-target="#how_to_use">How To Use</a> for more info.</h4>

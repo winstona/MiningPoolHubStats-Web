@@ -34,6 +34,8 @@ class miningpoolhubstats
 	public $confirmed_total_c = 0;
 	public $unconfirmed_total_c = 0;
 	public $delta_total = 0;
+	public $payout_last_24_total = 0;
+	public $hourly_estimate_total = 0;
 
 	public $is_cached_data = 0;
 	public $is_cached_conversion = 0;
@@ -138,6 +140,19 @@ class miningpoolhubstats
 	{
 		$this->full_coin_list = $this->make_api_call("https://miningpoolhub.com/index.php?page=api&action=getuserallbalances&api_key=" . $this->api_key);
 
+		foreach($this->full_coin_list->getuserallbalances->data as $coin){
+			$dashboard_data = $this->get_dashboard($coin->coin);
+
+			$coin->hashrate = $dashboard_data->getdashboarddata->data->personal->hashrate;
+			$coin->payout_last_24 = $dashboard_data->getdashboarddata->data->recent_credits_24hours->amount;
+			$coin->block_time = $dashboard_data->getdashboarddata->data->network->esttimeperblock;
+			$coin->estimated_earnings = $dashboard_data->getdashboarddata->data->personal->estimates->payout;
+		}
+	}
+
+	private function get_dashboard($coin)
+	{
+		return $this->make_api_call("https://" . $coin . ".miningpoolhub.com/index.php?page=api&action=getdashboarddata&api_key=" . $this->api_key);
 	}
 
 	private function generate_worker_stats($coin)
@@ -168,18 +183,13 @@ class miningpoolhubstats
 
 			$coin = (object)array();
 
-			foreach ($this->stats as $coin_stat) {
-				if ($coin_stat->coin == $row->coin) {
-					$coin->last_stat = $coin_stat->confirmed;
-				}
-			}
-
 			$coin->coin = $row->coin;
 			$coin->confirmed = number_format($row->confirmed + $row->ae_confirmed + $row->exchange, 8);
 			$coin->unconfirmed = number_format($row->unconfirmed + $row->ae_unconfirmed, 8);
 			$coin->total = number_format($row->confirmed + $row->ae_confirmed + $row->exchange + $row->unconfirmed + $row->ae_unconfirmed, 8);
-			$coin->delta = number_format($row->confirmed + $row->ae_confirmed + $row->exchange - $coin->last_stat, 8);
-
+			$coin->payout_last_24 = number_format($row->payout_last_24, 8);
+			$coin->hourly_estimate = (12*60 / $row->block_time) * $row->estimated_earnings;
+			$coin->hashrate = $row->hashrate;
 
 			//If a conversion rate was returned by API, set it
 
@@ -191,7 +201,8 @@ class miningpoolhubstats
 			$coin->confirmed_value = $price * ($row->confirmed + $row->ae_confirmed + $row->exchange);
 			$coin->unconfirmed_value = $price * ($row->unconfirmed + $row->ae_unconfirmed);
 			$coin->total_value = $price * ($row->confirmed + $row->ae_confirmed + $row->exchange + $row->unconfirmed + $row->ae_unconfirmed);
-			$coin->delta_value = $price * $coin->delta;
+			$coin->payout_last_24_value = $row->payout_last_24 * $price;
+			$coin->hourly_estimate_value = $coin->hourly_estimate * $price;
 
 			//Add the coin data into the main array we build the table with
 			$this->coin_data[] = $coin;
@@ -214,8 +225,11 @@ class miningpoolhubstats
 			if ($coin_datum->unconfirmed_value > 0) {
 				$this->unconfirmed_total += $coin_datum->unconfirmed_value;
 			}
-			if ($coin_datum->delta_value > 0) {
-				$this->delta_total += $coin_datum->delta_value;
+			if ($coin_datum->payout_last_24_value > 0) {
+				$this->payout_last_24_total += $coin_datum->payout_last_24_value;
+			}
+			if ($coin_datum->hourly_estimate_value > 0) {
+				$this->hourly_estimate_total += $coin_datum->hourly_estimate_value;
 			}
 		}
 
@@ -250,47 +264,7 @@ class miningpoolhubstats
 
 	public function daily_stats()
 	{
-
-		$result_data = (object)array();
-		$daily_delta = 0;
-		foreach ($this->full_coin_list->getuserallbalances->data as $row) {
-			$exchange_rate = 0;
-			$current_total = number_format($row->confirmed + $row->ae_confirmed + $row->unconfirmed + $row->ae_unconfirmed + $row->exchange, 8);
-
-			foreach ($this->daily_stats as $stat) {
-				if ($row->coin == $stat->coin) {
-					$interval_data = $stat;
-				}
-			}
-
-			$interval_total = number_format($interval_data->confirmed + $interval_data->ae_confirmed + $interval_data->unconfirmed + $interval_data->ae_unconfirmed + $interval_data->exchange, 8);
-
-			if (key_exists($row->coin, (array)$this->all_coins)) {
-
-				$code = $this->all_coins->{$row->coin}->code;
-				$exchange_rate = $this->crypto_prices->{$code}->{$this->fiat};
-
-			}
-
-			$result_data->{$row->coin} = (object)array(
-				'total' => $current_total,
-				'previous_total' => $interval_total,
-				'delta' => $current_total - $interval_total,
-				'value' => ($current_total - $interval_total) * $exchange_rate
-			);
-		}
-
-		foreach ($result_data as $row) {
-			$daily_delta += $row->value;
-		}
-
-		foreach ($this->coin_data as $coin) {
-			if ($coin->delta_value < 0) {
-				$daily_delta += -1 * $coin->delta_value;
-			}
-		}
-
-		return (number_format($daily_delta, $this->get_decimal_for_conversion()));
+		return (number_format($this->payout_last_24_total, $this->get_decimal_for_conversion()));
 
 	}
 
@@ -328,7 +302,7 @@ class miningpoolhubstats
 	private function get_miner_stats_from_cache()
 	{
 		//Check for cache, make API call if there is no data
-		$sql = "SELECT time,payload FROM minerstats WHERE apikey = '" . $this->strip_api_key() . "' AND time > DATE_SUB(NOW(), INTERVAL 5 MINUTE) ORDER BY id DESC LIMIT 1";
+		$sql = "SELECT time,payload FROM minerstats WHERE apikey = '" . $this->strip_api_key() . "' AND time > DATE_SUB(NOW(), INTERVAL 1 MINUTE) ORDER BY id DESC LIMIT 1";
 
 		$result = $this->mysqli->query($sql);
 		$object = $result->fetch_object();
