@@ -172,7 +172,7 @@ $estimate = $mph_stats->perform_estimate();
                     <th>Coin</th>
                     <th>Confirmed (% of min payout)</th>
                     <th>Unconfirmed</th>
-                    <th>Changes Last Hour</th>
+                    <th>Changes Last <?php echo $mph_stats->minutes; ?> Minutes</th>
                     <th>Total</th>
                     <th>Value (Conf.)</th>
                     <th>Value (Unconf.)</th>
@@ -387,6 +387,20 @@ $estimate = $mph_stats->perform_estimate();
                             <div id="collapseFour" class="collapse" role="tabpanel" aria-labelledby="headingFour" data-parent="#accordion">
                                 <div class="card-body">
                                     Stats are based on the last three hours of stats. Unfortunately, PPNLS pools like MPH are based on luck. You can earn a lot one hour, and nothing the next. If your last few hours were luckier, your stats will be better than expected. If you had an unlucky hour, your stats will be lower...
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" role="tab" id="headingFive">
+                                <h5 class="mb-0">
+                                    <a class="collapsed" data-toggle="collapse" href="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                                        Why does it show "Stats in Last X Minutes"?
+                                    </a>
+                                </h5>
+                            </div>
+                            <div id="collapseFive" class="collapse" role="tabpanel" aria-labelledby="headingFive" data-parent="#accordion">
+                                <div class="card-body">
+                                    Since the application relies on storing some data when you last view the app, it looks for the first record over an hour old. If you haven't visited in 4 hours, it will show you the difference for the last 4 hours (and will calculate an hourly estimate accordingly)
                                 </div>
                             </div>
                         </div>
