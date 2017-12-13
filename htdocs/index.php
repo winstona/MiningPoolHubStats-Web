@@ -285,6 +285,7 @@ $mph_stats->init_and_execute($api_key, $fiat);
     </div>
     <div class="row">
         <div class="col-md-12">
+            <br><br>
             <table class="table table-bordered table-striped" cellspacing="0" id="worker_table">
                 <thead>
                 <tr>
@@ -313,6 +314,7 @@ $mph_stats->init_and_execute($api_key, $fiat);
     </div>
     <div class="row">
         <div class="col-md-12">
+            <br><br>
             <table class="table table-bordered table-striped">
                 <tr>
                     <th>Cache</th>
