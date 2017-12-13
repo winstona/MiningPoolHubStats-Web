@@ -106,7 +106,8 @@ class miningpoolhubstats
 			'zencash' => (object)array('code' => 'ZEN', 'min_payout' => '0.002'),
 			'litecoin' => (object)array('code' => 'LTC', 'min_payout' => '0.002'),
 			'monacoin' => (object)array('code' => 'MONA', 'min_payout' => '0.1'),
-			'groestlcoin' => (object)array('code' => 'GRS', 'min_payout' => '0.002')
+			'groestlcoin' => (object)array('code' => 'GRS', 'min_payout' => '0.002'),
+			'zclassic' => (object)array('code' => 'ZCL', 'min_payout' => '0.001')
 		);
 	}
 
