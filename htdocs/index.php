@@ -235,8 +235,12 @@ $mph_stats->init_and_execute($api_key, $fiat);
                                 <br><?php echo number_format($coin->total_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
                             </b></td>
                         </td>
-                        <td><?php echo number_format($coin->hashrate, 4); ?></td>
-                        <td><?php echo number_format($coin->hourly_estimate_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
+                        <td <?php if ($coin->hashrate > 0) {
+	                        echo 'class="table-primary"';
+                        } ?>><?php echo number_format($coin->hashrate, 4); ?></td>
+                        <td <?php if ($coin->hourly_estimate_value > 0) {
+	                        echo 'class="table-success"';
+                        } ?>><?php echo number_format($coin->hourly_estimate_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                     </tr>
 					<?php
 				}
