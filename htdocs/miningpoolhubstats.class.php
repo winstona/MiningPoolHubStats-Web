@@ -44,9 +44,6 @@ class miningpoolhubstats
 	public $cache_time_conversion = 0;
 	public $cache_time_workers = 0;
 
-	private $stats = 0;
-	private $stats_time = 0;
-	private $daily_stats = 0;
 	public $minutes = 0;
 
 	private $crypto_prices = null;
@@ -79,8 +76,6 @@ class miningpoolhubstats
 		$this->api_key = $api_key;
 		$this->fiat = $fiat;
 		$this->init_all_coins();
-		$this->stats = $this->get_stats_for_last_x_hours(1);
-		$this->daily_stats = $this->get_stats_for_last_day();
 		$this->execute();
 	}
 
@@ -274,29 +269,6 @@ class miningpoolhubstats
 		return (number_format($this->payout_last_24_total / 24, $this->get_decimal_for_conversion()));
 	}
 
-	public function get_stats_for_last_x_hours($hour_count)
-	{
-
-		$sql = "SELECT time,payload FROM minerstats WHERE apikey = '" . $this->strip_api_key() . "' AND time < DATE_SUB(NOW(), INTERVAL " . $hour_count . " HOUR) ORDER BY id DESC LIMIT 1";
-
-		$result = $this->mysqli->query($sql);
-		$object = $result->fetch_object();
-		$this->stats_time = $object->time;
-		$stats = json_decode($object->payload);
-		return (object)$stats->getuserallbalances->data;
-	}
-
-	public function get_stats_for_last_day()
-	{
-
-		$sql = "SELECT time,payload FROM minerstats WHERE apikey = '" . $this->strip_api_key() . "' AND time < DATE_SUB(NOW(), INTERVAL 24 HOUR) ORDER BY id DESC LIMIT 1";
-
-		$result = $this->mysqli->query($sql);
-		$object = $result->fetch_object();
-		$stats = json_decode($object->payload);
-		return (object)$stats->getuserallbalances->data;
-	}
-
 	private function get_miner_stats_from_cache()
 	{
 		//Check for cache, make API call if there is no data
@@ -363,14 +335,20 @@ class miningpoolhubstats
 		if ($this->is_cached_data == 0) {
 			$sql = "INSERT INTO minerstats VALUES ('', '" . $this->strip_api_key() . "', '" . json_encode($this->full_coin_list) . "', NOW())";
 			$this->mysqli->query($sql);
+			$sql = "DELETE FROM minerstats  WHERE time < DATE_SUB(NOW(), INTERVAL 10 MINUTE)";
+			$this->mysqli->query($sql);
 		}
 		if ($this->is_cached_conversion == 0) {
 			$sql = "INSERT INTO conversions VALUES ('', '" . $this->fiat . "', '" . json_encode($this->crypto_prices) . "', NOW())";
+			$this->mysqli->query($sql);
+			$sql = "DELETE FROM conversions  WHERE time < DATE_SUB(NOW(), INTERVAL 1 MINUTE)";
 			$this->mysqli->query($sql);
 		}
 
 		if ($this->is_cached_workers == 0) {
 			$sql = "INSERT INTO workers VALUES ('', '" . $this->strip_api_key() . "', '" . json_encode($this->worker_data) . "', NOW())";
+			$this->mysqli->query($sql);
+			$sql = "DELETE FROM workers  WHERE time < DATE_SUB(NOW(), INTERVAL 1 MINUTE)";
 			$this->mysqli->query($sql);
 		}
 
