@@ -271,9 +271,7 @@ class miningpoolhubstats
 
 	function perform_estimate()
 	{
-		$hours = number_format((time() - strtotime($this->stats_time)) / (3600), 2);
-		$this->minutes = number_format($hours * 60);
-		return (number_format($this->delta_total / $hours, $this->get_decimal_for_conversion()));
+		return (number_format($this->payout_last_24_total / 24, $this->get_decimal_for_conversion()));
 	}
 
 	public function get_stats_for_last_x_hours($hour_count)

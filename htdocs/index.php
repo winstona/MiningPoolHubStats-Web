@@ -26,7 +26,7 @@ $api_key = null;
 $fiat = null;
 
 require_once("../config.php");
-require_once("m.class.php");
+require_once("miningpoolhubstats.class.php");
 
 $mph_stats = new miningpoolhubstats($db_host, $db_username, $db_password, $db_name);
 
@@ -49,7 +49,6 @@ if ($fiat == null || strlen($fiat) >= 5) {
 }
 
 $mph_stats->init_and_execute($api_key, $fiat);
-$estimate = $mph_stats->perform_estimate();
 
 
 //GENERATE THE UI HERE
