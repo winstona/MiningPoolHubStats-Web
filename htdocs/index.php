@@ -64,6 +64,7 @@ $mph_stats->init_and_execute($api_key, $fiat);
     <meta name="author" content="">
     <title>Miner Stats</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <link href="https://cdn.datatables.net/1.10.16/css/dataTables.bootstrap4.min.css" rel="stylesheet">
     <style>
         html {
             position: relative;
@@ -191,7 +192,8 @@ $mph_stats->init_and_execute($api_key, $fiat);
     <h3>24 Hr Earnings: <?php echo $mph_stats->daily_stats() . " " . $fiat; ?></h3>
     <div class="row">
         <div class="col-md-12">
-            <table class="table table-bordered table-striped">
+            <table class="table table-bordered table-striped" cellspacing="0" id="wallet_table">
+                <thead>
                 <tr>
                     <th>Coin</th>
                     <th>Confirmed (% of min payout)</th>
@@ -201,6 +203,8 @@ $mph_stats->init_and_execute($api_key, $fiat);
                     <th>Hash Rate</th>
                     <th>Hourly Estimate</th>
                 </tr>
+                </thead>
+                <tbody>
 				<?php
 
 				foreach ($mph_stats->coin_data as $coin) {
@@ -236,15 +240,17 @@ $mph_stats->init_and_execute($api_key, $fiat);
                             </b></td>
                         </td>
                         <td <?php if ($coin->hashrate > 0) {
-	                        echo 'class="table-primary"';
-                        } ?>><?php echo number_format($coin->hashrate, 4); ?></td>
+							echo 'class="table-primary"';
+						} ?>><?php echo number_format($coin->hashrate, 4); ?></td>
                         <td <?php if ($coin->hourly_estimate_value > 0) {
-	                        echo 'class="table-success"';
-                        } ?>><?php echo number_format($coin->hourly_estimate_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
+							echo 'class="table-success"';
+						} ?>><?php echo number_format($coin->hourly_estimate_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                     </tr>
 					<?php
 				}
 				?>
+                </tbody>
+                <tfoot>
                 <tr>
                     <td>TOTAL</td>
                     <td><?php echo number_format($mph_stats->confirmed_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
@@ -273,12 +279,14 @@ $mph_stats->init_and_execute($api_key, $fiat);
                         <br>Yearly
                     </td>
                 </tr>
+                </tfoot>
             </table>
         </div>
     </div>
     <div class="row">
         <div class="col-md-12">
-            <table class="table table-bordered table-striped">
+            <table class="table table-bordered table-striped" cellspacing="0" id="worker_table">
+                <thead>
                 <tr>
                     <th>#</th>
                     <th>Worker</th>
@@ -286,6 +294,8 @@ $mph_stats->init_and_execute($api_key, $fiat);
                     <th>Hashrate</th>
                     <th>Monitor</th>
                 </tr>
+                </thead>
+                <tbody>
 				<?php $count = 1;
 				foreach ($mph_stats->worker_data as $worker) { ?>
                     <tr>
@@ -297,6 +307,7 @@ $mph_stats->init_and_execute($api_key, $fiat);
                     </tr>
 					<?php $count++;
 				}; ?>
+                </tbody>
             </table>
         </div>
     </div>
@@ -370,6 +381,10 @@ $mph_stats->init_and_execute($api_key, $fiat);
                 </button>
             </div>
             <div class="modal-body">
+                <h2>Changes 12/13/2017</h2>
+                <ul>
+                    <li>Added Table sorting/filtering</li>
+                </ul>
                 <h2>Changes 12/12/2017</h2>
                 <ul>
                     <li>Added Changelog</li>
@@ -491,4 +506,12 @@ $mph_stats->init_and_execute($api_key, $fiat);
 </div>
 <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.bundle.min.js" integrity="sha384-3ziFidFTgxJXHMDttyPJKDuTlmxJlwbSkojudK/CkRqKDOmeSbN6KLrGdrBQnT2n" crossorigin="anonymous"></script>
+<script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.16/js/dataTables.bootstrap4.min.js"></script>
+<script language="javascript">
+    $(document).ready(function () {
+        $('#wallet_table').DataTable();
+        $('#worker_table').DataTable();
+    });
+</script>
 </body>
