@@ -198,10 +198,10 @@ $mph_stats->init_and_execute($api_key, $fiat);
                     <th>Coin</th>
                     <th>Confirmed (% of min payout)</th>
                     <th>Unconfirmed</th>
-                    <th>Payout Last 24 Hours</th>
                     <th>Total</th>
                     <th>Hash Rate</th>
                     <th>Hourly Estimate</th>
+                    <th>Payout Last 24 Hours</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -220,22 +220,17 @@ $mph_stats->init_and_execute($api_key, $fiat);
                             } ?>><?php echo $coin->coin; ?></span></td>
                         <td <?php if ($coin->confirmed_value > 0) {
 							echo 'class="table-success"';
-						} ?>><?php echo $coin->confirmed; ?><?php echo " (" . number_format(100 * $coin->confirmed / $mph_stats->all_coins->{$coin->coin}->min_payout, 0) . "%)"; ?>
+						} ?> data-order="<?php echo $coin->confirmed_value; ?>"><?php echo $coin->confirmed; ?><?php echo " (" . number_format(100 * $coin->confirmed / $mph_stats->all_coins->{$coin->coin}->min_payout, 0) . "%)"; ?>
                             <br><?php echo number_format($coin->confirmed_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
                         </td>
                         <td <?php if ($coin->unconfirmed_value > 0) {
 							echo 'class="table-success"';
-						} ?>><?php echo $coin->unconfirmed; ?>
+						} ?> data-order="<?php echo $coin->unconfirmed_value; ?>"><?php echo $coin->unconfirmed; ?>
                             <br><?php echo number_format($coin->unconfirmed_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
-                        </td>
-                        <td <?php if ($coin->payout_last_24 > 0) {
-							echo 'class="table-success"';
-						}; ?>><?php echo $coin->payout_last_24; ?>
-                            <br>(<?php echo number_format($coin->payout_last_24_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>)
                         </td>
                         <td <?php if ($coin->total_value > 0) {
 							echo 'class="table-success"';
-						} ?>><b><?php echo $coin->total; ?>
+						} ?> data-order="<?php echo $coin->total_value; ?>"><b><?php echo $coin->total; ?>
                                 <br><?php echo number_format($coin->total_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
                             </b></td>
                         </td>
@@ -245,6 +240,11 @@ $mph_stats->init_and_execute($api_key, $fiat);
                         <td <?php if ($coin->hourly_estimate_value > 0) {
 							echo 'class="table-success"';
 						} ?>><?php echo number_format($coin->hourly_estimate_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
+                        <td <?php if ($coin->payout_last_24 > 0) {
+							echo 'class="table-success"';
+						}; ?> data-order="<?php echo $coin->payout_last_24; ?>"><?php echo $coin->payout_last_24; ?>
+                            <br>(<?php echo number_format($coin->payout_last_24_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>)
+                        </td>
                     </tr>
 					<?php
 				}
