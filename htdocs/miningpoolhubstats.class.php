@@ -50,6 +50,14 @@ class miningpoolhubstats
 	private $crypto_api_coin_list = null;
 	public $full_coin_list = null;
 
+	private $conversion_cache_time = 20;
+	private $stats_cache_time = 10;
+	private $worker_cache_time = 10;
+
+	private $conversion_cache_clear_time = 25;
+	private $stats_cache_clear_time = 15;
+	private $worker_cache_clear_time = 15;
+
 	public $all_coins = null;
 
 	private $mysqli = null;
@@ -135,7 +143,7 @@ class miningpoolhubstats
 	{
 		$this->full_coin_list = $this->make_api_call("https://miningpoolhub.com/index.php?page=api&action=getuserallbalances&api_key=" . $this->api_key);
 
-		foreach($this->full_coin_list->getuserallbalances->data as $coin){
+		foreach ($this->full_coin_list->getuserallbalances->data as $coin) {
 			$dashboard_data = $this->get_dashboard($coin->coin);
 
 			$coin->hashrate = $dashboard_data->getdashboarddata->data->personal->hashrate;
@@ -272,7 +280,7 @@ class miningpoolhubstats
 	private function get_miner_stats_from_cache()
 	{
 		//Check for cache, make API call if there is no data
-		$sql = "SELECT time,payload FROM minerstats WHERE apikey = '" . $this->strip_api_key() . "' AND time > DATE_SUB(NOW(), INTERVAL 1 MINUTE) ORDER BY id DESC LIMIT 1";
+		$sql = "SELECT time,payload FROM minerstats WHERE apikey = '" . $this->strip_api_key() . "' AND time > DATE_SUB(NOW(), INTERVAL " . $this->stats_cache_time . " MINUTE) ORDER BY id DESC LIMIT 1";
 
 		$result = $this->mysqli->query($sql);
 		$object = $result->fetch_object();
@@ -292,7 +300,7 @@ class miningpoolhubstats
 	private function get_worker_stats_from_cache()
 	{
 		//Check for worker cache, make API call if there is no data
-		$sql = "SELECT time,payload FROM workers WHERE apikey = '" . $this->strip_api_key() . "' AND time > DATE_SUB(NOW(), INTERVAL 5 MINUTE) ORDER BY id DESC LIMIT 1";
+		$sql = "SELECT time,payload FROM workers WHERE apikey = '" . $this->strip_api_key() . "' AND time > DATE_SUB(NOW(), INTERVAL " . $this->worker_cache_time . " MINUTE) ORDER BY id DESC LIMIT 1";
 
 		$result = $this->mysqli->query($sql);
 		$object = $result->fetch_object();
@@ -313,7 +321,7 @@ class miningpoolhubstats
 	private function get_conversions_from_cache()
 	{
 		//Check for conversion cache, make API call if there is no data
-		$sql = "SELECT time,payload FROM conversions WHERE fiat = '" . $this->fiat . "' AND time > DATE_SUB(NOW(), INTERVAL 5 MINUTE) ORDER BY id DESC LIMIT 1";
+		$sql = "SELECT time,payload FROM conversions WHERE fiat = '" . $this->fiat . "' AND time > DATE_SUB(NOW(), INTERVAL " . $this->conversion_cache_time . " MINUTE) ORDER BY id DESC LIMIT 1";
 		$result = $this->mysqli->query($sql);
 		$object = $result->fetch_object();
 		$result->close();
@@ -335,20 +343,20 @@ class miningpoolhubstats
 		if ($this->is_cached_data == 0) {
 			$sql = "INSERT INTO minerstats VALUES ('', '" . $this->strip_api_key() . "', '" . json_encode($this->full_coin_list) . "', NOW())";
 			$this->mysqli->query($sql);
-			$sql = "DELETE FROM minerstats  WHERE time < DATE_SUB(NOW(), INTERVAL 10 MINUTE)";
+			$sql = "DELETE FROM minerstats  WHERE time < DATE_SUB(NOW(), INTERVAL " . $this->stats_cache_clear_time . " MINUTE)";
 			$this->mysqli->query($sql);
 		}
 		if ($this->is_cached_conversion == 0) {
 			$sql = "INSERT INTO conversions VALUES ('', '" . $this->fiat . "', '" . json_encode($this->crypto_prices) . "', NOW())";
 			$this->mysqli->query($sql);
-			$sql = "DELETE FROM conversions  WHERE time < DATE_SUB(NOW(), INTERVAL 1 MINUTE)";
+			$sql = "DELETE FROM conversions  WHERE time < DATE_SUB(NOW(), INTERVAL " . $this->conversion_cache_clear_time . " MINUTE)";
 			$this->mysqli->query($sql);
 		}
 
 		if ($this->is_cached_workers == 0) {
 			$sql = "INSERT INTO workers VALUES ('', '" . $this->strip_api_key() . "', '" . json_encode($this->worker_data) . "', NOW())";
 			$this->mysqli->query($sql);
-			$sql = "DELETE FROM workers  WHERE time < DATE_SUB(NOW(), INTERVAL 1 MINUTE)";
+			$sql = "DELETE FROM workers  WHERE time < DATE_SUB(NOW(), INTERVAL " . $this->worker_cache_clear_time . " MINUTE)";
 			$this->mysqli->query($sql);
 		}
 

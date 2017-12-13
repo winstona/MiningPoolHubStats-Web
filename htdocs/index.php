@@ -132,7 +132,7 @@ $mph_stats->init_and_execute($api_key, $fiat);
 
 
     // call the initial timer function, with the cb, how many iterations we want (30 seconds), and what the duration between iterations is (1 second)
-    window.onload = timerInit(doer, 60, 1);
+    window.onload = timerInit(doer, 300, 1);
 </script>
 <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
     <a class="navbar-brand" href="#">MPHStats</a>
@@ -180,7 +180,7 @@ $mph_stats->init_and_execute($api_key, $fiat);
             <ul class="nav navbar-nav"></ul>
             <ul class="nav navbar-nav pull-right">
                 <li class="nav-item">
-                    <a id="timer" class="nav-link">60</a>
+                    <a id="timer" class="nav-link">300</a>
                 </li>
             </ul>
         </ul>
