@@ -158,6 +158,8 @@ $mph_stats->init_and_execute($api_key, $fiat);
                 <div class="dropdown-menu" aria-labelledby="dropdown01">
                     <a class="dropdown-item" href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/BTC/<?php echo $api_key; ?>">BTC
                     </a>
+                    <a class="dropdown-item" href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/LTC/<?php echo $api_key; ?>">LTC
+                    </a>
                     <a class="dropdown-item" href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/ETH/<?php echo $api_key; ?>">ETH
                     </a>
                     <a class="dropdown-item" href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/XMR/<?php echo $api_key; ?>">XMR
