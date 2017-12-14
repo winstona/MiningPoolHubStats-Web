@@ -198,6 +198,7 @@ $mph_stats->init_and_execute($api_key, $fiat);
                     <th>Coin</th>
                     <th>Confirmed (% of min payout)</th>
                     <th>Unconfirmed</th>
+                    <th>On Exchange</th>
                     <th>Total</th>
                     <th>Hash Rate</th>
                     <th>Hourly Estimate</th>
@@ -228,6 +229,11 @@ $mph_stats->init_and_execute($api_key, $fiat);
 						} ?> data-order="<?php echo $coin->unconfirmed_value; ?>"><?php echo $coin->unconfirmed; ?>
                             <br><?php echo number_format($coin->unconfirmed_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
                         </td>
+                        <td <?php if ($coin->for_exchange_value > 0) {
+		                    echo 'class="table-success"';
+	                    } ?> data-order="<?php echo $coin->for_exchange_value; ?>"><?php echo $coin->for_exchange; ?>
+                            <br><?php echo number_format($coin->for_exchange_value, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
+                        </td>
                         <td <?php if ($coin->total_value > 0) {
 							echo 'class="table-success"';
 						} ?> data-order="<?php echo $coin->total_value; ?>"><b><?php echo $coin->total; ?>
@@ -255,7 +261,8 @@ $mph_stats->init_and_execute($api_key, $fiat);
                     <td>TOTAL</td>
                     <td><?php echo number_format($mph_stats->confirmed_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                     <td><?php echo number_format($mph_stats->unconfirmed_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
-                    <td><?php echo number_format($mph_stats->confirmed_total + $mph_stats->unconfirmed_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
+                    <td><?php echo number_format($mph_stats->for_exchange_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
+                    <td><?php echo number_format($mph_stats->confirmed_total + $mph_stats->unconfirmed_total + $mph_stats->for_exchange_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                     <td></td>
                     <td><?php echo number_format($mph_stats->hourly_estimate_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                     <td><?php echo number_format($mph_stats->payout_last_24_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
@@ -278,6 +285,7 @@ $mph_stats->init_and_execute($api_key, $fiat);
                     <td><?php echo number_format($mph_stats->hourly_estimate_total * 24 * 365, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?>
                         <br>Yearly
                     </td>
+                    <td></td>
                 </tr>
                 </tfoot>
             </table>

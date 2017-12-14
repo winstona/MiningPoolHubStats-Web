@@ -31,6 +31,7 @@ class miningpoolhubstats
 
 	public $confirmed_total = 0;
 	public $unconfirmed_total = 0;
+	public $for_exchange_total = 0;
 	public $confirmed_total_c = 0;
 	public $unconfirmed_total_c = 0;
 	public $delta_total = 0;
@@ -107,7 +108,10 @@ class miningpoolhubstats
 			'litecoin' => (object)array('code' => 'LTC', 'min_payout' => '0.002'),
 			'monacoin' => (object)array('code' => 'MONA', 'min_payout' => '0.1'),
 			'groestlcoin' => (object)array('code' => 'GRS', 'min_payout' => '0.002'),
-			'zclassic' => (object)array('code' => 'ZCL', 'min_payout' => '0.001')
+			'zclassic' => (object)array('code' => 'ZCL', 'min_payout' => '0.001'),
+			'dash' => (object)array('code' => 'DASH', 'min_payout' => '0.1'),
+			'gamecredits' => (object)array('code' => 'GAME', 'min_payout' => '1.0'),
+			'verge-scrypt' => (object)array('code' => 'XVG', 'min_payout' => '0.15')
 		);
 	}
 
@@ -188,8 +192,9 @@ class miningpoolhubstats
 			$coin = (object)array();
 
 			$coin->coin = $row->coin;
-			$coin->confirmed = number_format($row->confirmed + $row->ae_confirmed + $row->exchange, 8);
-			$coin->unconfirmed = number_format($row->unconfirmed + $row->ae_unconfirmed, 8);
+			$coin->confirmed = number_format($row->confirmed, 8);
+			$coin->unconfirmed = number_format($row->unconfirmed, 8);
+			$coin->for_exchange = number_format($row->ae_confirmed + $row->exchange + $row->ae_unconfirmed, 8);
 			$coin->total = number_format($row->confirmed + $row->ae_confirmed + $row->exchange + $row->unconfirmed + $row->ae_unconfirmed, 8);
 			$coin->payout_last_24 = number_format($row->payout_last_24, 8);
 			$coin->hourly_estimate = ((1440 / $row->block_time) * $row->estimated_earnings);
@@ -202,8 +207,9 @@ class miningpoolhubstats
 			//Get fiat prices
 			$price = $this->crypto_prices->{$code}->{$this->fiat};
 
-			$coin->confirmed_value = $price * ($row->confirmed + $row->ae_confirmed + $row->exchange);
-			$coin->unconfirmed_value = $price * ($row->unconfirmed + $row->ae_unconfirmed);
+			$coin->confirmed_value = $price * ($row->confirmed);
+			$coin->unconfirmed_value = $price * ($row->unconfirmed);
+			$coin->for_exchange_value = $price * ($row->ae_confirmed + $row->exchange + $row->ae_unconfirmed);
 			$coin->total_value = $price * ($row->confirmed + $row->ae_confirmed + $row->exchange + $row->unconfirmed + $row->ae_unconfirmed);
 			$coin->payout_last_24_value = $row->payout_last_24 * $price;
 			$coin->hourly_estimate_value = $coin->hourly_estimate * $price;
@@ -228,6 +234,12 @@ class miningpoolhubstats
 			}
 			if ($coin_datum->unconfirmed_value > 0) {
 				$this->unconfirmed_total += $coin_datum->unconfirmed_value;
+			}
+			if ($coin_datum->for_exchange_value > 0) {
+				$this->for_exchange_total += $coin_datum->for_exchange_value;
+			}
+			if ($coin_datum->hourly_estimate_value > 0) {
+				$this->hourly_estimate_total += $coin_datum->hourly_estimate_value;
 			}
 			if ($coin_datum->payout_last_24_value > 0) {
 				$this->payout_last_24_total += $coin_datum->payout_last_24_value;
