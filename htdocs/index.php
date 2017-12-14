@@ -255,10 +255,10 @@ $mph_stats->init_and_execute($api_key, $fiat);
                     <td>TOTAL</td>
                     <td><?php echo number_format($mph_stats->confirmed_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                     <td><?php echo number_format($mph_stats->unconfirmed_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
-                    <td><?php echo number_format($mph_stats->payout_last_24_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                     <td><?php echo number_format($mph_stats->confirmed_total + $mph_stats->unconfirmed_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                     <td></td>
                     <td><?php echo number_format($mph_stats->hourly_estimate_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
+                    <td><?php echo number_format($mph_stats->payout_last_24_total, $mph_stats->get_decimal_for_conversion()) . " " . $fiat; ?></td>
                 </tr>
                 <tr>
                     <td>ESTIMATES (Based on API block info)</td>
